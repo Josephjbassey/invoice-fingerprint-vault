@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="favAmber" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Shield Backing -->
+  <rect width="64" height="64" rx="16" fill="#08090a" />
+
+  <!-- Outer Vault Shield Contour -->
+  <path d="M32 8 L52 17 C52 35 44 48 32 58 C20 48 12 35 12 17 Z" 
+        fill="#121316" 
+        stroke="url(#favAmber)" 
+        stroke-width="3" 
+        stroke-linejoin="round" />
+
+  <!-- High-Contrast Fingerprint Arcs -->
+  <path d="M22 31 C22 24 26 20 32 20 C38 20 42 24 42 31 C42 39 37 43 32 48 C28 44 24 40 23 36" 
+        fill="none" 
+        stroke="url(#favAmber)" 
+        stroke-width="2.5" 
+        stroke-linecap="round" />
+
+  <path d="M27 34 C27 30 29 27 32 27 C35 27 37 30 37 34 C37 38 34 40 32 43" 
+        fill="none" 
+        stroke="url(#favAmber)" 
+        stroke-width="2" 
+        stroke-linecap="round" />
+
+  <!-- Core Proof Node -->
+  <circle cx="32" cy="35" r="2.5" fill="#fef08a" />
+  
+  <!-- Active Green Consensus Pulse Dot -->
+  <circle cx="32" cy="14" r="1.75" fill="#10b981" />
+</svg>

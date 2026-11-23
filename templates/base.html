@@ -4,6 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Invoice Fingerprint Vault — Decentralized Proof-of-Existence on Gno.land{% endblock %}</title>
+    <!-- Favicon & Touch Icons -->
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/img/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/img/apple-touch-icon.png">
+    <link rel="manifest" href="/static/site.webmanifest">
+    <meta name="theme-color" content="#08090a">
+
+    <!-- Open Graph & Meta Cards -->
+    <meta property="og:title" content="Invoice Fingerprint Vault — Decentralized Proof-of-Existence on Gno.land">
+    <meta property="og:description" content="Anchor cryptographic SHA-256 digests of invoices, contracts, and receipts into Gno's persistent AVL tree. 100% Zero-Knowledge.">
+    <meta property="og:image" content="/static/img/logo.png">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="/static/img/logo.png">
+
     <!-- Tailwind CSS Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -75,13 +91,9 @@
             <!-- Brand Logo -->
             <div class="flex items-center space-x-8">
                 <a href="{% url 'home' %}" class="flex items-center space-x-3 group">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition">
-                        <svg class="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                    </div>
+                    <img src="/static/img/icon.svg" alt="Invoice Vault Icon" class="w-9 h-9 rounded-xl shadow-lg shadow-amber-500/20 group-hover:scale-105 transition">
                     <div class="flex items-center gap-2">
-                        <span class="font-bold text-base tracking-tight text-white group-hover:text-amber-400 transition">Invoice Vault</span>
+                        <span class="font-extrabold text-base tracking-tight text-white group-hover:text-amber-400 transition">Invoice <span class="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">Vault</span></span>
                         <span class="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">onyx-1</span>
                     </div>
                 </a>
@@ -146,13 +158,9 @@
                 
                 <!-- Col 1: Brand Info (Spans 2 cols on md) -->
                 <div class="col-span-2 space-y-4">
-                    <div class="flex items-center space-x-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-amber-500 flex items-center justify-center text-black font-bold">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4" />
-                            </svg>
-                        </div>
-                        <span class="font-bold text-white text-sm">Invoice Fingerprint Vault</span>
+                    <div class="flex items-center space-x-3">
+                        <img src="/static/img/icon.svg" alt="Invoice Vault Icon" class="w-8 h-8 rounded-lg shadow-sm">
+                        <span class="font-extrabold text-white text-base">Invoice <span class="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">Vault</span></span>
                     </div>
                     <p class="text-xs text-zinc-400 leading-relaxed max-w-sm">
                         Zero-knowledge proof-of-existence registry for invoices, contracts, and receipts. 

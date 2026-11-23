@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#141518" />
+      <stop offset="50%" stop-color="#0c0d0f" />
+      <stop offset="100%" stop-color="#050506" />
+    </linearGradient>
+
+    <!-- Amber Gold Gradient -->
+    <linearGradient id="amberGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="30%" stop-color="#f59e0b" />
+      <stop offset="70%" stop-color="#d97706" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+
+    <!-- Secondary Cyan/Emerald Accent -->
+    <linearGradient id="accentGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+
+    <!-- Radial Core Glow -->
+    <radialGradient id="coreGlow" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.3" />
+      <stop offset="60%" stop-color="#f59e0b" stop-opacity="0.05" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Outer Border Glow Filter -->
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <filter id="badgeGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#f59e0b" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- Base Squircle Tile -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" stroke="rgba(255, 255, 255, 0.08)" stroke-width="4" />
+  <rect width="512" height="512" rx="112" fill="url(#coreGlow)" />
+
+  <!-- Subtle Micro Grid Matrix -->
+  <g stroke="rgba(255, 255, 255, 0.03)" stroke-width="1.5">
+    <line x1="128" y1="0" x2="128" y2="512" />
+    <line x1="256" y1="0" x2="256" y2="512" />
+    <line x1="384" y1="0" x2="384" y2="512" />
+    <line x1="0" y1="128" x2="512" y2="128" />
+    <line x1="0" y1="256" x2="512" y2="256" />
+    <line x1="0" y1="384" x2="512" y2="384" />
+  </g>
+
+  <!-- Outer Protective Vault Shield -->
+  <g filter="url(#badgeGlow)">
+    <!-- Shield Background Surface -->
+    <path d="M256 84 L384 144 C384 260 336 348 256 420 C176 348 128 260 128 144 Z" 
+          fill="#0c0d10" 
+          stroke="url(#amberGold)" 
+          stroke-width="10" 
+          stroke-linejoin="round" />
+  </g>
+
+  <!-- Inner Vault Chamber Rim -->
+  <path d="M256 108 L360 156 C360 250 320 324 256 386 C192 324 152 250 152 156 Z" 
+        fill="none" 
+        stroke="rgba(255, 255, 255, 0.07)" 
+        stroke-width="3" 
+        stroke-linejoin="round" />
+
+  <!-- Cryptographic Biometric Fingerprint Ridges -->
+  <g fill="none" stroke="url(#amberGold)" stroke-linecap="round" stroke-linejoin="round">
+    
+    <!-- Outer Loop (Ridge 1) -->
+    <path d="M200 240 C200 196 225 170 256 170 C287 170 312 196 312 240 C312 284 286 314 256 340 C234 321 216 298 206 270" 
+          stroke-width="7" 
+          stroke-opacity="0.9" />
+
+    <!-- Second Loop (Ridge 2) -->
+    <path d="M222 254 C222 224 237 202 256 202 C275 202 290 224 290 254 C290 274 278 296 256 316" 
+          stroke-width="7" 
+          stroke-opacity="0.95" />
+
+    <!-- Inner Core Loop (Ridge 3) -->
+    <path d="M242 260 C242 244 248 232 256 232 C264 232 270 244 270 260 C270 274 264 286 256 296" 
+          stroke-width="7" />
+
+    <!-- Top Vault Anchor Crest -->
+    <path d="M256 126 L256 148" stroke-width="6" stroke="url(#amberGold)" />
+  </g>
+
+  <!-- Verification Proof Starburst / Seal Node (Glowing Central Anchor) -->
+  <g transform="translate(256, 260)">
+    <!-- Subtle Pulse Ring -->
+    <circle r="18" fill="none" stroke="#f59e0b" stroke-width="2" stroke-opacity="0.4" />
+    <circle r="7" fill="#fef08a" />
+  </g>
+
+  <!-- Top Hardware Consensus Status Dots (Tendermint Triad) -->
+  <circle cx="236" cy="120" r="3.5" fill="#10b981" />
+  <circle cx="256" cy="116" r="4.5" fill="#f59e0b" />
+  <circle cx="276" cy="120" r="3.5" fill="#10b981" />
+
+</svg>
