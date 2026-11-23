@@ -1,10 +1,15 @@
 import hashlib
+import re
 
 from django import forms
 
+HEX_SHA256_RE = re.compile(r"^[a-fA-F0-9]{64}$")
+
 
 class DocumentUploadForm(forms.Form):
-    document = forms.FileField(required=True, help_text="Upload invoice or receipt (PDF, PNG, JPG up to 10MB)")
+    document = forms.FileField(required=False, help_text="Upload invoice or receipt (PDF, PNG, JPG up to 10MB)")
+    fingerprint = forms.CharField(max_length=64, required=False, widget=forms.HiddenInput())
+    document_name = forms.CharField(max_length=255, required=False, widget=forms.HiddenInput())
     submitter_address = forms.CharField(max_length=255, required=False, widget=forms.HiddenInput())
     tx_hash = forms.CharField(max_length=255, required=False, widget=forms.HiddenInput())
 
@@ -13,20 +18,33 @@ class DocumentUploadForm(forms.Form):
         if doc:
             if doc.size > 10 * 1024 * 1024:
                 raise forms.ValidationError("File size must not exceed 10MB.")
-            ext = doc.name.split(".")[-1].lower()
+            ext = doc.name.split(".")[-1].lower() if "." in doc.name else ""
             allowed = ["pdf", "png", "jpg", "jpeg", "txt"]
             if ext not in allowed:
                 raise forms.ValidationError("Allowed formats: PDF, PNG, JPG, JPEG, TXT.")
         return doc
 
+    def clean(self):
+        cleaned_data = super().clean()
+        doc = cleaned_data.get("document")
+        fp = (cleaned_data.get("fingerprint") or "").strip().lower()
+
+        if not doc and not fp:
+            raise forms.ValidationError("Please provide either an invoice document or a pre-computed SHA-256 fingerprint.")
+
+        if fp and not HEX_SHA256_RE.match(fp):
+            raise forms.ValidationError("Invalid SHA-256 fingerprint format: must be 64 hexadecimal characters.")
+
+        return cleaned_data
+
     def compute_sha256(self):
         doc = self.cleaned_data.get("document")
-        if not doc:
-            return None
-        hasher = hashlib.sha256()
-        for chunk in doc.chunks():
-            hasher.update(chunk)
-        return hasher.hexdigest()
+        if doc:
+            hasher = hashlib.sha256()
+            for chunk in doc.chunks():
+                hasher.update(chunk)
+            return hasher.hexdigest()
+        return (self.cleaned_data.get("fingerprint") or "").strip().lower()
 
 
 class VerificationForm(forms.Form):

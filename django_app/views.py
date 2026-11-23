@@ -15,6 +15,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
+from django.db.models import Q
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
@@ -107,10 +108,43 @@ def terms_view(request: HttpRequest) -> HttpResponse:
 
 @login_required
 def dashboard_view(request: HttpRequest) -> HttpResponse:
-    """Renders user's personal vault entries, testnet block height, and network status."""
-    entries = InvoiceVaultEntry.objects.filter(user=request.user)
+    """
+    Renders user's personal vault entries, testnet block height, and network status.
+    Aggregates records tied to the authenticated user account and their connected Adena wallet address.
+    """
+    wallet_addrs = set()
+    if request.user.username.startswith("g1"):
+        wallet_addrs.add(request.user.username)
+
+    session_wallet = request.session.get("connected_wallet")
+    if session_wallet and session_wallet.startswith("g1"):
+        wallet_addrs.add(session_wallet)
+
+    param_wallet = request.GET.get("wallet", "").strip()
+    if param_wallet and GNO_ADDRESS_RE.match(param_wallet):
+        wallet_addrs.add(param_wallet)
+        request.session["connected_wallet"] = param_wallet
+
+    # Auto-link any records with matching submitter address to current user
+    if wallet_addrs:
+        InvoiceVaultEntry.objects.filter(submitter_address__in=wallet_addrs).exclude(user=request.user).update(
+            user=request.user
+        )
+
+    # Comprehensive query: match user OR matching submitter address
+    q = Q(user=request.user)
+    if wallet_addrs:
+        q |= Q(submitter_address__in=wallet_addrs)
+
+    entries = InvoiceVaultEntry.objects.filter(q).distinct().order_by("-created_at")
     rpc_status = get_rpc_status()
     total_count = entries.count()
+    active_wallet = (
+        session_wallet
+        or (request.user.username if request.user.username.startswith("g1") else "")
+        or param_wallet
+    )
+
     return render(
         request,
         "dashboard.html",
@@ -119,6 +153,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
             "rpc_status": rpc_status,
             "total_count": total_count,
             "realm_path": settings.GNO_REALM_PATH,
+            "connected_wallet": active_wallet,
         },
     )
 
@@ -127,21 +162,36 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
 def upload_view(request: HttpRequest) -> HttpResponse:
     """
     Handles invoice document upload and proof registration.
-    Computes SHA-256 fingerprint server-side if submitted via standard POST,
-    or attaches Adena wallet transaction hash if submitted via Web3 wallet.
+    Supports either file upload or pre-computed SHA-256 fingerprint from client WebCrypto.
+    Attaches Adena wallet transaction hash if submitted via Web3 wallet.
     """
     rpc_status = get_rpc_status()
+    form_error = None
     if request.method == "POST":
         form = DocumentUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            doc = form.cleaned_data["document"]
+            doc = form.cleaned_data.get("document")
+            raw_doc_name = form.cleaned_data.get("document_name") or ""
             raw_submitter = form.cleaned_data.get("submitter_address") or ""
             raw_tx = form.cleaned_data.get("tx_hash") or ""
+
+            # Determine document name
+            if doc:
+                doc_name = doc.name
+            elif raw_doc_name:
+                doc_name = raw_doc_name
+            else:
+                doc_name = "invoice-document.pdf"
+
+            safe_doc_name = html.escape(doc_name)[:255]
 
             # Sanitize submitter address
             submitter = raw_submitter.strip()
             if not submitter or not GNO_ADDRESS_RE.match(submitter):
                 submitter = request.user.username if request.user.username.startswith("g1") else "g1-pending-wallet"
+
+            if submitter.startswith("g1"):
+                request.session["connected_wallet"] = submitter
 
             # Sanitize tx hash
             tx_hash = raw_tx.strip() or "8891AF70E1FAE545BA99C37DCE627E0357B94415C2BC3B7CA349ADAFF4F487D3"
@@ -151,11 +201,8 @@ def upload_view(request: HttpRequest) -> HttpResponse:
             if tx_hash:
                 gnoscan_link = f"{settings.GNOSCAN_BASE_URL}/transactions/{tx_hash}"
 
-            # Sanitize document name to prevent stored XSS
-            safe_doc_name = html.escape(doc.name)[:255]
-
-            # Save or retrieve off-chain vault record
-            entry, created = InvoiceVaultEntry.objects.get_or_create(
+            # Save or update off-chain vault record
+            entry, created = InvoiceVaultEntry.objects.update_or_create(
                 user=request.user,
                 fingerprint=fingerprint,
                 defaults={
@@ -175,14 +222,22 @@ def upload_view(request: HttpRequest) -> HttpResponse:
                     "realm_path": settings.GNO_REALM_PATH,
                 },
             )
+        else:
+            form_error = "Validation error: Please ensure a valid file or 64-char fingerprint is provided."
     else:
-        form = DocumentUploadForm()
+        initial = {}
+        if "hash" in request.GET:
+            initial["fingerprint"] = request.GET.get("hash", "").strip()
+        if "name" in request.GET:
+            initial["document_name"] = request.GET.get("name", "").strip()
+        form = DocumentUploadForm(initial=initial)
 
     return render(
         request,
         "upload.html",
         {
             "form": form,
+            "form_error": form_error,
             "rpc_status": rpc_status,
             "realm_path": settings.GNO_REALM_PATH,
             "chain_id": settings.GNO_CHAIN_ID,
@@ -268,7 +323,43 @@ def certificate_download_view(request: HttpRequest, entry_id: int) -> HttpRespon
 def api_wallet_login(request: HttpRequest) -> JsonResponse:
     """
     Authenticates or creates a user account seamlessly via their Adena wallet address.
-    Strictly validates Gno bech32 address format.
+    Strictly validates Gno bech32 address format. Automatically associates wallet records.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "HTTP POST required"}, status=405)
+
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+        address = (data.get("address") or "").strip()
+        next_url = (data.get("next") or request.GET.get("next") or "/dashboard/").strip()
+
+        if not address or not GNO_ADDRESS_RE.match(address):
+            return JsonResponse({"error": "Invalid Gno testnet wallet address format"}, status=400)
+
+        user, _ = User.objects.get_or_create(username=address, defaults={"email": f"{address[:10]}@gno.vault"})
+        login(request, user)
+        request.session["connected_wallet"] = address
+
+        # Associate any existing records with this submitter address to this user
+        InvoiceVaultEntry.objects.filter(submitter_address=address).update(user=user)
+
+        # Basic security: ensure redirect is a relative path
+        if not next_url.startswith("/"):
+            next_url = "/dashboard/"
+
+        return JsonResponse({"success": True, "redirect": next_url})
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Malformed JSON body"}, status=400)
+    except Exception:
+        logger.exception("Wallet login exception")
+        return JsonResponse({"error": "Internal server error during wallet login"}, status=500)
+
+
+@csrf_exempt
+def api_wallet_connect(request: HttpRequest) -> JsonResponse:
+    """
+    Synchronizes connected Adena wallet address with the user's active session.
+    Automatically links orphaned wallet entries to the authenticated user.
     """
     if request.method != "POST":
         return JsonResponse({"error": "HTTP POST required"}, status=405)
@@ -278,16 +369,24 @@ def api_wallet_login(request: HttpRequest) -> JsonResponse:
         address = (data.get("address") or "").strip()
 
         if not address or not GNO_ADDRESS_RE.match(address):
-            return JsonResponse({"error": "Invalid Gno testnet wallet address format"}, status=400)
+            return JsonResponse({"error": "Invalid Gno wallet address format"}, status=400)
 
-        user, _ = User.objects.get_or_create(username=address, defaults={"email": f"{address[:10]}@gno.vault"})
-        login(request, user)
-        return JsonResponse({"success": True, "redirect": "/dashboard/"})
+        request.session["connected_wallet"] = address
+
+        updated_count = 0
+        if request.user.is_authenticated:
+            updated_count = (
+                InvoiceVaultEntry.objects.filter(submitter_address=address)
+                .exclude(user=request.user)
+                .update(user=request.user)
+            )
+
+        return JsonResponse({"success": True, "address": address, "linked_entries": updated_count})
     except json.JSONDecodeError:
         return JsonResponse({"error": "Malformed JSON body"}, status=400)
     except Exception:
-        logger.exception("Wallet login exception")
-        return JsonResponse({"error": "Internal server error during wallet login"}, status=500)
+        logger.exception("Error in api_wallet_connect")
+        return JsonResponse({"error": "Internal server error"}, status=500)
 
 
 @csrf_exempt
@@ -326,10 +425,10 @@ def api_compute_hash(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-@login_required
 def api_record_entry(request: HttpRequest) -> JsonResponse:
     """
     Saves an off-chain vault entry after client-side Adena transaction commitment.
+    Accepts authenticated users or auto-authenticates via validated submitter address.
     Strictly sanitizes inputs and validates fingerprint format.
     """
     if request.method != "POST":
@@ -345,19 +444,33 @@ def api_record_entry(request: HttpRequest) -> JsonResponse:
         if not HEX_SHA256_RE.match(fingerprint):
             return JsonResponse({"error": "Invalid SHA-256 fingerprint format"}, status=400)
 
+        # Determine user identity
+        active_user = request.user if request.user.is_authenticated else None
+        if not active_user:
+            if submitter and GNO_ADDRESS_RE.match(submitter):
+                active_user, _ = User.objects.get_or_create(
+                    username=submitter, defaults={"email": f"{submitter[:10]}@gno.vault"}
+                )
+                login(request, active_user)
+            else:
+                return JsonResponse({"error": "Authentication required to register record"}, status=401)
+
         safe_doc_name = html.escape(doc_name)[:255]
         safe_submitter = (
             html.escape(submitter)[:255]
             if submitter
-            else (request.user.username if request.user.username.startswith("g1") else "g1-wallet")
+            else (active_user.username if active_user.username.startswith("g1") else "g1-wallet")
         )
+
+        if safe_submitter.startswith("g1"):
+            request.session["connected_wallet"] = safe_submitter
 
         gnoscan_link = f"{settings.GNOSCAN_BASE_URL}/realms/{settings.GNO_REALM_PATH}"
         if tx_hash:
             gnoscan_link = f"{settings.GNOSCAN_BASE_URL}/transactions/{tx_hash}"
 
         entry, created = InvoiceVaultEntry.objects.update_or_create(
-            user=request.user,
+            user=active_user,
             fingerprint=fingerprint,
             defaults={
                 "document_name": safe_doc_name,
@@ -371,6 +484,8 @@ def api_record_entry(request: HttpRequest) -> JsonResponse:
                 "success": True,
                 "created": created,
                 "id": entry.id,
+                "fingerprint": entry.fingerprint,
+                "document_name": entry.document_name,
                 "gnoscan_link": entry.gnoscan_link,
             }
         )
@@ -379,6 +494,74 @@ def api_record_entry(request: HttpRequest) -> JsonResponse:
     except Exception:
         logger.exception("Error in api_record_entry")
         return JsonResponse({"error": "Failed to save vault record"}, status=500)
+
+
+@csrf_exempt
+@login_required
+def api_sync_onchain(request: HttpRequest) -> JsonResponse:
+    """
+    Imports or re-syncs a verified on-chain proof from Gno.land AVL tree into the user's personal vault.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "HTTP POST required"}, status=405)
+
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+        fingerprint = (data.get("fingerprint") or "").strip().lower()
+
+        if not HEX_SHA256_RE.match(fingerprint):
+            return JsonResponse({"error": "Invalid SHA-256 fingerprint format: must be 64 hex characters"}, status=400)
+
+        onchain_res = verify_fingerprint_onchain(fingerprint)
+        if not onchain_res.get("verified"):
+            return JsonResponse(
+                {"error": "Fingerprint is not registered in the Gno.land on-chain realm."},
+                status=404,
+            )
+
+        details = onchain_res.get("details", "")
+        doc_name = "On-Chain Invoice Proof"
+        submitter = request.user.username if request.user.username.startswith("g1") else "g1-onchain-wallet"
+
+        # Parse metadata from on-chain output if available
+        for line in details.splitlines():
+            line_str = line.strip()
+            if line_str.startswith("- **Document:**"):
+                parsed_name = line_str.split(":", 1)[1].strip()
+                if parsed_name:
+                    doc_name = parsed_name
+            elif line_str.startswith("- **Submitter:**"):
+                if "`" in line_str:
+                    parsed_sub = line_str.split("`")[1]
+                    if GNO_ADDRESS_RE.match(parsed_sub):
+                        submitter = parsed_sub
+
+        entry, created = InvoiceVaultEntry.objects.update_or_create(
+            user=request.user,
+            fingerprint=fingerprint,
+            defaults={
+                "document_name": html.escape(doc_name)[:255],
+                "submitter_address": submitter,
+                "tx_hash": "8891AF70E1FAE545BA99C37DCE627E0357B94415C2BC3B7CA349ADAFF4F487D3",
+                "gnoscan_link": f"{settings.GNOSCAN_BASE_URL}/realms/{settings.GNO_REALM_PATH}",
+            },
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "created": created,
+                "id": entry.id,
+                "document_name": entry.document_name,
+                "fingerprint": entry.fingerprint,
+                "submitter_address": entry.submitter_address,
+            }
+        )
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Malformed JSON body"}, status=400)
+    except Exception:
+        logger.exception("Error in api_sync_onchain")
+        return JsonResponse({"error": "Failed to sync on-chain record"}, status=500)
 
 
 def register_view(request: HttpRequest) -> HttpResponse:

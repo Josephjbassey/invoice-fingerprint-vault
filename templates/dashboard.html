@@ -15,7 +15,14 @@
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Document Vault</h1>
             <p class="text-sm text-zinc-400 mt-1">Cryptographic proof-of-existence records anchored to Gno.land testnet.</p>
         </div>
-        <div class="flex items-center space-x-3 shrink-0">
+        <div class="flex flex-wrap items-center gap-3 shrink-0">
+            <button type="button" onclick="openSyncModal()" 
+                    class="inline-flex items-center px-4 py-3 text-xs font-semibold rounded-xl bg-surface hover:bg-elevated text-amber-400 border border-amber-500/30 hover:border-amber-400 transition">
+                <svg class="w-4 h-4 mr-2 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Sync On-Chain
+            </button>
             <a href="{% url 'upload' %}" 
                class="inline-flex items-center px-5 py-3 text-xs font-bold rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-zinc-950 transition shadow-lg shadow-amber-500/20">
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -31,11 +38,11 @@
     </div>
 
     <!-- Quick stats grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <div class="glass-card rounded-xl p-5 border border-white/[0.08]">
             <span class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">Your Vault Entries</span>
             <div class="text-3xl font-extrabold text-white">{{ total_count }}</div>
-            <span class="text-xs text-zinc-500 mt-1 block">Local cryptographic index</span>
+            <span class="text-xs text-zinc-500 mt-1 block">Local & on-chain index</span>
         </div>
         <div class="glass-card rounded-xl p-5 border border-white/[0.08]">
             <span class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">Gno.land Network</span>
@@ -48,6 +55,20 @@
             <span class="text-xs text-emerald-400 mt-2 flex items-center gap-1.5">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                 ABCI Node Synchronized
+            </span>
+        </div>
+        <div class="glass-card rounded-xl p-5 border border-white/[0.08]">
+            <span class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">Wallet Identity</span>
+            <div class="text-xs font-mono text-amber-400 truncate mt-1" id="dash-wallet-display">
+                {% if connected_wallet %}
+                {{ connected_wallet|slice:":8" }}...{{ connected_wallet|slice:"-6:" }}
+                {% else %}
+                <span class="text-zinc-500">Not Connected</span>
+                {% endif %}
+            </div>
+            <span class="text-[11px] text-zinc-400 mt-2 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full {% if connected_wallet %}bg-emerald-400{% else %}bg-zinc-600{% endif %}"></span>
+                {% if connected_wallet %}Adena Linked{% else %}Standard Session{% endif %}
             </span>
         </div>
     </div>
@@ -140,15 +161,137 @@
                     Select an invoice or receipt to compute its SHA-256 fingerprint and anchor it to Gno.land testnet.
                 </p>
             </div>
-            <div class="pt-2">
+            <div class="pt-2 flex flex-wrap justify-center gap-3">
                 <a href="{% url 'upload' %}" 
                    class="inline-flex items-center px-5 py-2.5 text-xs font-bold rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 transition">
                     Anchor Your First Document &rarr;
                 </a>
+                <button type="button" onclick="openSyncModal()" 
+                        class="inline-flex items-center px-4 py-2.5 text-xs font-semibold rounded-xl bg-surface hover:bg-elevated text-zinc-300 hover:text-white border border-white/[0.08] transition">
+                    Sync On-Chain Hash
+                </button>
             </div>
         </div>
         {% endif %}
     </div>
 
 </div>
+
+<!-- Sync On-Chain Proof Modal -->
+<div id="sync-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full rounded-2xl p-6 border border-white/[0.1] shadow-2xl space-y-4">
+        <div class="flex justify-between items-center pb-2 border-b border-white/[0.08]">
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Sync Proof from Gno.land
+            </h3>
+            <button onclick="closeSyncModal()" class="text-zinc-500 hover:text-white">&times;</button>
+        </div>
+        <p class="text-xs text-zinc-400">
+            Enter the 64-character SHA-256 fingerprint of any document previously registered to the Gno.land testnet realm to import it into your personal vault.
+        </p>
+        <div class="space-y-2">
+            <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">SHA-256 Fingerprint</label>
+            <input type="text" id="sync-hash-input" placeholder="e.g. 53ed60e76da28e574e533a9dd80a8dc13012aafaee8652e488c0bb5287b54d4c" 
+                   class="w-full px-3.5 py-2.5 bg-[#0d0e11] border border-white/[0.08] rounded-xl text-white font-mono text-xs focus:outline-none focus:border-amber-400">
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+            <button type="button" onclick="closeSyncModal()" class="px-4 py-2 rounded-xl text-xs text-zinc-400 hover:text-white bg-surface">
+                Cancel
+            </button>
+            <button type="button" id="sync-submit-btn" onclick="submitOnChainSync()" 
+                    class="px-5 py-2 rounded-xl text-xs font-bold text-zinc-950 bg-amber-400 hover:bg-amber-300 transition">
+                Sync Proof
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function openSyncModal() {
+        document.getElementById('sync-modal').classList.remove('hidden');
+        document.getElementById('sync-hash-input').focus();
+    }
+
+    function closeSyncModal() {
+        document.getElementById('sync-modal').classList.add('hidden');
+    }
+
+    async function submitOnChainSync() {
+        const input = document.getElementById('sync-hash-input');
+        const hash = (input.value || '').trim();
+        if (!hash || hash.length !== 64) {
+            alert("Please enter a valid 64-character SHA-256 hexadecimal hash.");
+            return;
+        }
+
+        const btn = document.getElementById('sync-submit-btn');
+        btn.disabled = true;
+        btn.innerText = "Querying Gno.land...";
+
+        try {
+            const csrfToken = (document.querySelector('[name=csrfmiddlewaretoken]') || {}).value || '';
+            const res = await fetch('/api/sync/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({ fingerprint: hash })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast("Proof synced from Gno.land: " + (data.document_name || "Invoice Proof"));
+                closeSyncModal();
+                setTimeout(() => window.location.reload(), 800);
+            } else {
+                alert(data.error || "Failed to find or sync proof on Gno.land testnet.");
+                btn.disabled = false;
+                btn.innerText = "Sync Proof";
+            }
+        } catch (err) {
+            alert("Network error querying Gno.land RPC: " + (err.message || err));
+            btn.disabled = false;
+            btn.innerText = "Sync Proof";
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('anchored') === '1') {
+            showToast("Invoice proof anchored on-chain and registered to your vault!");
+        }
+
+        // Auto-synchronize Adena wallet session
+        if (window.VaultWallet && window.VaultWallet.isInstalled()) {
+            window.adena.GetAccount().then(res => {
+                const addr = (res && res.data && res.data.address) || (res && res.address);
+                if (addr) {
+                    const disp = document.getElementById('dash-wallet-display');
+                    if (disp) {
+                        disp.innerText = `${addr.slice(0, 8)}...${addr.slice(-6)}`;
+                    }
+                    // Sync with backend session
+                    fetch('/api/wallet-connect/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ address: addr })
+                    }).then(r => r.json()).then(d => {
+                        // If new entries were linked to this user and not yet refreshed:
+                        if (d.linked_entries && d.linked_entries > 0 && !urlParams.get('synced')) {
+                            showToast(`Linked ${d.linked_entries} invoice proof(s) to your account!`);
+                            setTimeout(() => {
+                                window.location.href = '/dashboard/?synced=1';
+                            }, 1000);
+                        }
+                    }).catch(() => {});
+                }
+            }).catch(() => {});
+        }
+    });
+</script>
 {% endblock %}

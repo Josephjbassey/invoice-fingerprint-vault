@@ -29,6 +29,7 @@ window.VaultWallet = {
                 if (addr) {
                     this.account = addr;
                     this.updateUI();
+                    this.syncWalletSession(addr);
                     return this.account;
                 }
             }
@@ -36,6 +37,19 @@ window.VaultWallet = {
         } catch (err) {
             console.error("Adena connection error:", err);
             throw err;
+        }
+    },
+
+    async syncWalletSession(addr) {
+        if (!addr) return;
+        try {
+            await fetch('/api/wallet-connect/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ address: addr })
+            });
+        } catch (e) {
+            console.debug("Wallet session sync:", e);
         }
     },
 
@@ -68,12 +82,14 @@ window.VaultWallet = {
         const addr = await this.connect();
         if (!addr) throw new Error("No address returned from Adena");
 
+        const nextParam = new URLSearchParams(window.location.search).get('next');
+
         const response = await fetch('/api/wallet-login/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ address: addr })
+            body: JSON.stringify({ address: addr, next: nextParam || '/dashboard/' })
         });
         const data = await response.json();
         if (data.success) {
@@ -139,12 +155,11 @@ window.VaultWallet = {
 document.addEventListener('DOMContentLoaded', () => {
     if (window.VaultWallet.isInstalled()) {
         window.adena.GetAccount().then(res => {
-            if (res && res.data && res.data.address) {
-                window.VaultWallet.account = res.data.address;
+            const addr = (res && res.data && res.data.address) || (res && res.address);
+            if (addr) {
+                window.VaultWallet.account = addr;
                 window.VaultWallet.updateUI();
-            } else if (res && res.address) {
-                window.VaultWallet.account = res.address;
-                window.VaultWallet.updateUI();
+                window.VaultWallet.syncWalletSession(addr);
             }
         }).catch(() => {});
     }

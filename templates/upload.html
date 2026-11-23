@@ -20,8 +20,19 @@
 
     <!-- Upload Card -->
     <div class="glass-card rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl border border-white/[0.08]">
+        {% if form_error %}
+        <div class="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400 flex items-center gap-2">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <span>{{ form_error }}</span>
+        </div>
+        {% endif %}
+
         <form id="upload-form" method="POST" enctype="multipart/form-data" class="space-y-6">
             {% csrf_token %}
+            {{ form.fingerprint }}
+            {{ form.document_name }}
             {{ form.submitter_address }}
             {{ form.tx_hash }}
 
@@ -135,10 +146,16 @@
         const qName = urlParams.get('name');
         if (qHash) {
             currentFingerprint = qHash;
-            fileNameEl.innerText = qName || 'Pre-computed Document';
+            const cleanName = qName || 'Pre-computed Document';
+            fileNameEl.innerText = cleanName;
             fileSizeEl.innerText = 'Pre-hashed';
             fileHashEl.innerText = qHash;
             previewBox.classList.remove('hidden');
+
+            const fpInput = document.querySelector('input[name="fingerprint"]');
+            const nameInput = document.querySelector('input[name="document_name"]');
+            if (fpInput) fpInput.value = qHash;
+            if (nameInput) nameInput.value = cleanName;
         }
     });
 
@@ -156,6 +173,12 @@
         
         currentFingerprint = hashHex;
         fileHashEl.innerText = hashHex;
+
+        const fpInput = document.querySelector('input[name="fingerprint"]');
+        const nameInput = document.querySelector('input[name="document_name"]');
+        if (fpInput) fpInput.value = hashHex;
+        if (nameInput) nameInput.value = file.name;
+
         showToast("Computed SHA-256 fingerprint!");
     }
 
@@ -181,6 +204,10 @@
             if (!window.VaultWallet.isInstalled()) {
                 const proceed = confirm("Adena wallet extension is not installed in this browser.\n\nWould you like to register this document in Demo Mode instead?");
                 if (proceed) {
+                    const fpInput = document.querySelector('input[name="fingerprint"]');
+                    const nameInput = document.querySelector('input[name="document_name"]');
+                    if (fpInput) fpInput.value = currentFingerprint;
+                    if (nameInput) nameInput.value = currentFile ? currentFile.name : (fileNameEl.innerText || "document.pdf");
                     document.getElementById('upload-form').submit();
                 }
                 adenaBtn.innerHTML = origText;
@@ -197,10 +224,45 @@
             );
 
             // Populate hidden inputs
-            document.querySelector('input[name="submitter_address"]').value = window.VaultWallet.account;
-            document.querySelector('input[name="tx_hash"]').value = txResult.txHash;
+            const subInput = document.querySelector('input[name="submitter_address"]');
+            const txInput = document.querySelector('input[name="tx_hash"]');
+            const fpInput = document.querySelector('input[name="fingerprint"]');
+            const nameInput = document.querySelector('input[name="document_name"]');
+            
+            if (subInput) subInput.value = window.VaultWallet.account || '';
+            if (txInput) txInput.value = txResult.txHash || '';
+            if (fpInput) fpInput.value = currentFingerprint;
+            if (nameInput) nameInput.value = docName;
 
             showToast("Transaction signed! Anchoring to Gno.land...");
+
+            // First: Attempt fast, reliable JSON persistence via API
+            try {
+                const csrfToken = (document.querySelector('[name=csrfmiddlewaretoken]') || {}).value || '';
+                const recordRes = await fetch('/api/record/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: JSON.stringify({
+                        fingerprint: currentFingerprint,
+                        document_name: docName,
+                        submitter_address: window.VaultWallet.account || '',
+                        tx_hash: txResult.txHash || ''
+                    })
+                });
+                const recordData = await recordRes.json();
+                if (recordData && recordData.success) {
+                    showToast("Document recorded and anchored successfully!");
+                    window.location.href = '/dashboard/?anchored=1';
+                    return;
+                }
+            } catch (apiErr) {
+                console.warn("API record notice, falling back to form submit:", apiErr);
+            }
+
+            // Fallback: standard form submit
             document.getElementById('upload-form').submit();
 
         } catch (err) {

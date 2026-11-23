@@ -130,6 +130,18 @@
                 <div class="font-mono text-zinc-300 whitespace-pre-line text-xs bg-black/40 p-3.5 rounded-lg border border-white/[0.06]">
                     {{ result.onchain.details }}
                 </div>
+                {% if result.onchain.verified and user.is_authenticated %}
+                <div class="pt-2 flex justify-end">
+                    <button type="button" onclick="syncThisProof('{{ result.fingerprint }}')" 
+                            id="verify-sync-btn"
+                            class="px-4 py-2 rounded-xl text-xs font-semibold bg-amber-400 hover:bg-amber-300 text-zinc-950 transition flex items-center gap-1.5 shadow-sm">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Import to My Vault Dashboard</span>
+                    </button>
+                </div>
+                {% endif %}
             </div>
 
             <!-- Off-chain database match card if found -->
@@ -184,6 +196,36 @@
         if (input) {
             input.value = hash;
             input.form.submit();
+        }
+    }
+
+    async function syncThisProof(hash) {
+        const btn = document.getElementById('verify-sync-btn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = "Syncing...";
+        }
+        try {
+            const csrfToken = (document.querySelector('[name=csrfmiddlewaretoken]') || {}).value || '';
+            const res = await fetch('/api/sync/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({ fingerprint: hash })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast("Imported into your dashboard!");
+                setTimeout(() => window.location.href = '/dashboard/', 800);
+            } else {
+                alert(data.error || "Failed to import proof.");
+                if (btn) { btn.disabled = false; btn.innerText = "Import to My Vault Dashboard"; }
+            }
+        } catch (err) {
+            alert("Error syncing proof: " + err);
+            if (btn) { btn.disabled = false; btn.innerText = "Import to My Vault Dashboard"; }
         }
     }
 

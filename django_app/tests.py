@@ -44,6 +44,23 @@ class InvoiceVaultSecurityAndIntegrationTests(TestCase):
         self.assertEqual(entry.submitter_address, "g1ryq6ldrlwtsvp0mhs5r8g7qflp2upe4lw57zk2")
         self.assertIn(expected_hash, response.content.decode("utf-8"))
 
+    def test_upload_precomputed_fingerprint_without_file(self):
+        """Allows anchoring pre-computed SHA-256 fingerprint without re-uploading file."""
+        fp = "c" * 64
+        response = self.client.post(
+            reverse("upload"),
+            {
+                "fingerprint": fp,
+                "document_name": "prehashed_invoice.pdf",
+                "submitter_address": "g1ryq6ldrlwtsvp0mhs5r8g7qflp2upe4lw57zk2",
+                "tx_hash": "tx-precomputed-123",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(InvoiceVaultEntry.objects.filter(fingerprint=fp).exists())
+        entry = InvoiceVaultEntry.objects.get(fingerprint=fp)
+        self.assertEqual(entry.document_name, "prehashed_invoice.pdf")
+
     def test_upload_disallowed_file_extension(self):
         """Ensures non-document files (.exe, .sh) are rejected."""
         malicious_content = b"#!/bin/bash\necho hack"
@@ -208,6 +225,90 @@ class InvoiceVaultSecurityAndIntegrationTests(TestCase):
         }
         resp_err = self.client.post(reverse("api_record_entry"), data=invalid_data, content_type="application/json")
         self.assertEqual(resp_err.status_code, 400)
+
+    # -------------------------------------------------------------
+    # 7. Persistence & Dashboard Visibility Lifecycle Tests
+    # -------------------------------------------------------------
+    def test_dashboard_visibility_after_logout_and_relogin(self):
+        """
+        Validates the critical bugfix:
+        1. User creates entry via wallet address
+        2. Logs out
+        3. Logs back in with Adena wallet login OR password login
+        4. Entry persists and is visible on dashboard
+        """
+        adena_addr = "g1ryq6ldrlwtsvp0mhs5r8g7qflp2upe4lw57zk2"
+        test_hash = "d" * 64
+        InvoiceVaultEntry.objects.create(
+            user=self.user,
+            document_name="critical_tax_audit.pdf",
+            fingerprint=test_hash,
+            submitter_address=adena_addr,
+            tx_hash="tx-verified-onchain-999",
+        )
+
+        # Confirm visible while logged in as username
+        resp1 = self.client.get(reverse("dashboard"))
+        self.assertEqual(resp1.status_code, 200)
+        self.assertContains(resp1, "critical_tax_audit.pdf")
+
+        # 1. Log out
+        self.client.logout()
+
+        # 2. Log in using Adena wallet
+        resp_login = self.client.post(
+            reverse("api_wallet_login"),
+            data={"address": adena_addr},
+            content_type="application/json",
+        )
+        self.assertEqual(resp_login.status_code, 200)
+
+        # 3. Check dashboard again: must display the entry!
+        resp2 = self.client.get(reverse("dashboard"))
+        self.assertEqual(resp2.status_code, 200)
+        self.assertContains(resp2, "critical_tax_audit.pdf")
+        self.assertContains(resp2, test_hash[:10])
+
+        # 4. Log out again, log back in as original username user
+        self.client.logout()
+        self.client.login(username="testauditor", password="SecurePassword123!")
+
+        resp3 = self.client.get(reverse("dashboard") + f"?wallet={adena_addr}")
+        self.assertEqual(resp3.status_code, 200)
+        self.assertContains(resp3, "critical_tax_audit.pdf")
+
+    def test_api_wallet_connect_linking(self):
+        """Validates that connecting a wallet associates orphaned entries."""
+        wallet = "g1ryq6ldrlwtsvp0mhs5r8g7qflp2upe4lw57zk2"
+        other_user = User.objects.create_user(username="otheruser", password="password")
+        entry = InvoiceVaultEntry.objects.create(
+            user=other_user,
+            document_name="linked_receipt.pdf",
+            fingerprint="f" * 64,
+            submitter_address=wallet,
+        )
+
+        resp = self.client.post(
+            reverse("api_wallet_connect"),
+            data={"address": wallet},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        entry.refresh_from_db()
+        self.assertEqual(entry.user, self.user)
+
+    def test_api_sync_onchain_proof(self):
+        """Tests importing an on-chain verified hash into user's vault."""
+        sample_hash = "53ed60e76da28e574e533a9dd80a8dc13012aafaee8652e488c0bb5287b54d4c"
+        resp = self.client.post(
+            reverse("api_sync_onchain"),
+            data={"fingerprint": sample_hash},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data.get("success"))
+        self.assertTrue(InvoiceVaultEntry.objects.filter(fingerprint=sample_hash).exists())
 
     # -------------------------------------------------------------
     # 7. Public Content & Educational View Tests
