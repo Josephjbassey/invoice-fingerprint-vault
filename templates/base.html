@@ -101,7 +101,7 @@
                 <!-- Live Network Pill -->
                 <div class="hidden sm:flex items-center space-x-2 text-xs bg-zinc-900/90 border border-white/[0.08] px-3 py-1.5 rounded-full text-zinc-400">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400/50"></span>
-                    <span class="font-mono text-[11px]">onyx-1 : #1350400</span>
+                    <span class="font-mono text-[11px]">onyx-1 : #{{ rpc_status.latest_block_height|default:"1352200" }}</span>
                 </div>
 
                 <!-- Adena Connect Button -->
