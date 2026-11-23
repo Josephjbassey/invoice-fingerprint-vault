@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Document Fingerprint | Gno.land{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+    <div class="text-center space-y-2">
+        <h1 class="text-2xl font-bold tracking-tight text-white">Public Verification Portal</h1>
+        <p class="text-sm text-zinc-400">Cryptographically verify proof-of-existence for any invoice or document.</p>
+    </div>
+
+    <!-- Verification Search Box -->
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-6">
+        <form method="POST" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            {% if validation_error %}
+            <div class="p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400 flex items-center space-x-2">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>{{ validation_error }}</span>
+            </div>
+            {% endif %}
+            <div>
+                <label class="block text-xs uppercase font-medium text-zinc-400 mb-2">Query by SHA-256 Fingerprint</label>
+                {{ form.fingerprint }}
+            </div>
+
+            <!-- Alternative: Drop file to hash and verify -->
+            <div class="flex items-center justify-between text-xs text-zinc-500 pt-1">
+                <span>Or select a file to compute hash automatically:</span>
+                <button type="button" onclick="document.getElementById('verify-file-input').click()" class="text-amber-400 hover:text-amber-300 font-medium">
+                    Upload File to Verify
+                </button>
+            </div>
+            {{ form.document }}
+
+            <div class="pt-2">
+                <button type="submit" class="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition shadow-lg shadow-amber-500/20 flex items-center justify-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <span>Verify On-Chain</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Section -->
+    {% if result %}
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-6 animate-fade-in">
+        <div class="flex items-center justify-between border-b border-zinc-800 pb-4">
+            <h2 class="text-lg font-bold text-white">Verification Status</h2>
+            {% if result.onchain.verified or result.local_entry %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></span>
+                VERIFIED PROOF OF EXISTENCE
+            </span>
+            {% else %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/30">
+                NOT REGISTERED
+            </span>
+            {% endif %}
+        </div>
+
+        <div class="space-y-4 text-xs">
+            <div>
+                <span class="text-zinc-500 block uppercase font-medium">Fingerprint Queried:</span>
+                <span class="font-mono text-amber-400 bg-zinc-950 px-3 py-2 rounded-lg border border-zinc-800 block break-all mt-1 select-all">
+                    {{ result.fingerprint }}
+                </span>
+            </div>
+
+            <!-- On-chain verification card -->
+            <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="font-medium text-white">Gno.land Testnet Status (onyx-1)</span>
+                    <span class="text-zinc-400">{{ result.onchain.source }}</span>
+                </div>
+                <div class="font-mono text-zinc-300 whitespace-pre-line text-xs bg-zinc-900/50 p-3 rounded border border-zinc-800/80">
+                    {{ result.onchain.details }}
+                </div>
+            </div>
+
+            <!-- Off-chain database match card if found -->
+            {% if result.local_entry %}
+            <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2">
+                <span class="font-medium text-white block">Vault Database Record</span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-zinc-300">
+                    <div>
+                        <span class="text-zinc-500 block">Document Name:</span>
+                        <span class="font-semibold">{{ result.local_entry.document_name }}</span>
+                    </div>
+                    <div>
+                        <span class="text-zinc-500 block">Submitter Wallet:</span>
+                        <span class="font-mono">{{ result.local_entry.submitter_address|default:"Demo Wallet" }}</span>
+                    </div>
+                    <div>
+                        <span class="text-zinc-500 block">Timestamp:</span>
+                        <span>{{ result.local_entry.created_at|date:"Y-m-d H:i:s" }} UTC</span>
+                    </div>
+                    <div>
+                        <span class="text-zinc-500 block">Explorer:</span>
+                        {% if result.local_entry.gnoscan_link %}
+                        <a href="{{ result.local_entry.gnoscan_link }}" target="_blank" class="text-amber-400 hover:underline">View on GnoScan &rarr;</a>
+                        {% else %}
+                        <span class="text-zinc-600">N/A</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const fileInput = document.getElementById('verify-file-input');
+    const hashInput = document.querySelector('input[name="fingerprint"]');
+
+    if (fileInput && hashInput) {
+        fileInput.addEventListener('change', async (e) => {
+            if (e.target.files.length) {
+                const file = e.target.files[0];
+                const buffer = await file.arrayBuffer();
+                const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                hashInput.value = hashHex;
+                // Auto submit form
+                hashInput.form.submit();
+            }
+        });
+    }
+</script>
+{% endblock %}

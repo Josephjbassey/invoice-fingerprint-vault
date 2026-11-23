@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-zinc-950 text-zinc-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Invoice Fingerprint Vault | Gno.land{% endblock %}</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="/static/js/adena.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        code, pre, .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="min-h-full flex flex-col bg-zinc-950 text-zinc-100 antialiased selection:bg-amber-500 selection:text-black">
+
+    <!-- Top Navigation -->
+    <header class="border-b border-zinc-800 bg-zinc-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-6">
+                <a href="/" class="flex items-center space-x-3 group">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition">
+                        <svg class="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="font-bold text-lg tracking-tight text-white">Invoice Vault</span>
+                        <span class="text-xs px-2 py-0.5 ml-1.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">onyx-1</span>
+                    </div>
+                </a>
+
+                <nav class="hidden md:flex items-center space-x-1 text-sm font-medium text-zinc-400">
+                    <a href="{% url 'dashboard' %}" class="px-3 py-2 rounded-lg hover:text-white hover:bg-zinc-800/60 transition {% if request.resolver_match.url_name == 'dashboard' %}text-white bg-zinc-800{% endif %}">Dashboard</a>
+                    <a href="{% url 'upload' %}" class="px-3 py-2 rounded-lg hover:text-white hover:bg-zinc-800/60 transition {% if request.resolver_match.url_name == 'upload' %}text-white bg-zinc-800{% endif %}">Fingerprint & Timestamp</a>
+                    <a href="{% url 'verify' %}" class="px-3 py-2 rounded-lg hover:text-white hover:bg-zinc-800/60 transition {% if request.resolver_match.url_name == 'verify' %}text-white bg-zinc-800{% endif %}">Verify Document</a>
+                </nav>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <!-- Live RPC network pill -->
+                <div class="hidden sm:flex items-center space-x-2 text-xs bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-full text-zinc-400">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Testnet RPC: <strong class="text-zinc-200">onyx-1</strong></span>
+                </div>
+
+                <!-- Adena Wallet Connect Button -->
+                <button type="button" onclick="connectAdenaWallet()" class="wallet-connect-btn inline-flex items-center px-3.5 py-1.5 text-xs font-medium rounded-lg bg-amber-600 hover:bg-amber-500 text-black font-semibold transition shadow-sm">
+                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    Connect Adena
+                </button>
+
+                {% if user.is_authenticated %}
+                <span class="text-xs text-zinc-400 font-mono hidden md:inline">{{ user.username }}</span>
+                <a href="{% url 'logout' %}" class="text-xs text-zinc-400 hover:text-zinc-200 px-2 py-1">Logout</a>
+                {% else %}
+                <a href="{% url 'login' %}" class="text-xs text-zinc-400 hover:text-white px-2 py-1">Login</a>
+                <a href="{% url 'register' %}" class="text-xs text-amber-400 hover:text-amber-300 font-medium px-2 py-1">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-zinc-900 bg-zinc-950 py-6 text-xs text-zinc-500 text-center">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p>Invoice Fingerprint Vault — Proof-of-existence on <strong>Gno.land</strong> testnet (onyx-1)</p>
+            <div class="flex space-x-4">
+                <a href="https://adena.app" target="_blank" class="hover:text-amber-400 transition">Adena Wallet</a>
+                <a href="https://faucet.gno.land" target="_blank" class="hover:text-amber-400 transition">Testnet Faucet</a>
+                <a href="https://gnoscan.io" target="_blank" class="hover:text-amber-400 transition">GnoScan</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        async function connectAdenaWallet() {
+            if (!window.VaultWallet.isInstalled()) {
+                alert("Adena wallet extension not detected!\n\nPlease install Adena from https://adena.app to sign transactions on Gno.land testnet.");
+                window.open("https://adena.app", "_blank");
+                return;
+            }
+            try {
+                const addr = await window.VaultWallet.connect();
+                console.log("Connected to Adena:", addr);
+            } catch (err) {
+                alert("Connection failed: " + (err.message || err));
+            }
+        }
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,45 @@
+# Python Virtual Environment & Bytecode
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Databases & Runtime State
+db.sqlite3
+*.sqlite3
+staticfiles/
+
+# Raw video scratch files
+media/video_raw/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Environment Variables & Private Credentials
+.env
+.env.local
+.env.*.local
+gno_private.key
+deployer.mnemonic
+
+# System & Editor
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Local Planning & Scratch Documents (Do not track in public repository)
+guidelines-summary.md
+hackathon-plan.md
+hackathon-schedule.md
+prebuild-plan.md
+demo_script.md
+prd.md
+security-checklist.md

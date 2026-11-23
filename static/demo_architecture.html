@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Fingerprint Vault — Architecture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glow-indigo {
+            box-shadow: 0 0 60px -15px rgba(99, 102, 241, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col justify-center items-center p-8 overflow-hidden relative">
+
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.08)_0,transparent_70%)] pointer-events-none"></div>
+    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 via-indigo-500 to-purple-600"></div>
+
+    <div class="max-w-5xl w-full z-10 space-y-8">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-zinc-800 pb-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                        System Architecture & Gno.land Realm
+                        <span class="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 font-medium">Production Spec</span>
+                    </h1>
+                    <p class="text-xs text-zinc-400">Full stack proof-of-existence infrastructure</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 font-mono text-xs text-zinc-400 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-lg">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Unit Tests: 100% PASS</span>
+            </div>
+        </div>
+
+        <!-- Main Card -->
+        <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-8 glow-indigo backdrop-blur-md grid grid-cols-1 md:grid-cols-12 gap-8">
+            
+            <!-- Architecture Pillars -->
+            <div class="md:col-span-6 space-y-4">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <span class="text-amber-400">01.</span> Gno Smart Contract (Realm)
+                </h3>
+                <div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800 font-mono text-xs text-zinc-300 space-y-1.5">
+                    <p class="text-zinc-500">// Package Path:</p>
+                    <p class="text-amber-400 font-bold">gno.land/r/g12uesl2nr27jh8q.../vault</p>
+                    <p class="text-zinc-500 pt-2">// AVL Tree Storage:</p>
+                    <p class="text-indigo-400">avl.Tree (Deterministic O(log N) lookup)</p>
+                    <p class="text-zinc-500 pt-2">// State Event Emission:</p>
+                    <p class="text-emerald-400">chain.Emit("InvoiceRegistered", ...)</p>
+                </div>
+
+                <div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800 text-xs space-y-2">
+                    <div class="font-bold text-white flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Testnet Deployment Verified
+                    </div>
+                    <p class="text-zinc-400 text-[11px]">
+                        Committed in block <b>#1350400</b> on <code>onyx-1</code>. 
+                        Transaction: <span class="font-mono text-zinc-300">8891AF70E1FAE545...</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- What's Next / Roadmap -->
+            <div class="md:col-span-6 space-y-4">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <span class="text-indigo-400">02.</span> Production Roadmap
+                </h3>
+                
+                <div class="space-y-3">
+                    <div class="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 flex items-start gap-3">
+                        <div class="p-2 rounded-lg bg-amber-500/10 text-amber-400 text-xs font-bold">Q1</div>
+                        <div>
+                            <div class="text-xs font-bold text-zinc-200">Batch Document Timestamping</div>
+                            <div class="text-[11px] text-zinc-400">Merkle root aggregation to commit thousands of invoices in a single transaction.</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 flex items-start gap-3">
+                        <div class="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 text-xs font-bold">Q2</div>
+                        <div>
+                            <div class="text-xs font-bold text-zinc-200">GRC-20 Fee Micropayments</div>
+                            <div class="text-[11px] text-zinc-400">Commercial enterprise pay-per-verification API and automated notary royalties.</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 flex items-start gap-3">
+                        <div class="p-2 rounded-lg bg-purple-500/10 text-purple-400 text-xs font-bold">Q3</div>
+                        <div>
+                            <div class="text-xs font-bold text-zinc-200">Mobile Wallet Integration</div>
+                            <div class="text-[11px] text-zinc-400">Native iOS/Android camera scanning with instant on-chain authenticity verification.</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-between text-xs text-zinc-500 px-2">
+            <div>Invoice Fingerprint Vault • Gno.land Hackathon 2026</div>
+            <div class="text-zinc-400">Thank you for watching!</div>
+        </div>
+
+    </div>
+
+</body>
+</html>
