@@ -1,106 +1,103 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
   <defs>
-    <!-- Background Gradient -->
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#141518" />
+    <!-- Background Dark Radial Gradient -->
+    <radialGradient id="appIconBg" cx="50%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#18191d" />
       <stop offset="50%" stop-color="#0c0d0f" />
-      <stop offset="100%" stop-color="#050506" />
-    </linearGradient>
+      <stop offset="100%" stop-color="#040405" />
+    </radialGradient>
 
-    <!-- Amber Gold Gradient -->
-    <linearGradient id="amberGold" x1="0%" y1="0%" x2="100%" y2="100%">
+    <!-- Amber Gold Shading -->
+    <linearGradient id="appIconAmber" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#fef08a" />
-      <stop offset="30%" stop-color="#f59e0b" />
-      <stop offset="70%" stop-color="#d97706" />
+      <stop offset="25%" stop-color="#fbbf24" />
+      <stop offset="65%" stop-color="#f59e0b" />
       <stop offset="100%" stop-color="#b45309" />
     </linearGradient>
 
-    <!-- Secondary Cyan/Emerald Accent -->
-    <linearGradient id="accentGlow" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#10b981" />
-      <stop offset="100%" stop-color="#06b6d4" />
+    <!-- Shield Face Inner Gradient -->
+    <linearGradient id="shieldFace" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1c1e24" />
+      <stop offset="100%" stop-color="#090a0c" />
     </linearGradient>
 
-    <!-- Radial Core Glow -->
-    <radialGradient id="coreGlow" cx="50%" cy="45%" r="55%">
-      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.3" />
-      <stop offset="60%" stop-color="#f59e0b" stop-opacity="0.05" />
+    <!-- Ambient Mesh Glow -->
+    <radialGradient id="glowPulse" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.25" />
+      <stop offset="70%" stop-color="#f59e0b" stop-opacity="0.04" />
       <stop offset="100%" stop-color="#000000" stop-opacity="0" />
     </radialGradient>
 
-    <!-- Outer Border Glow Filter -->
-    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="8" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
-
-    <filter id="badgeGlow" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#f59e0b" flood-opacity="0.35" />
+    <!-- Drop Shadows -->
+    <filter id="shield3DShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="24" stdDeviation="32" flood-color="#f59e0b" flood-opacity="0.3" />
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.8" />
     </filter>
   </defs>
 
-  <!-- Base Squircle Tile -->
-  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" stroke="rgba(255, 255, 255, 0.08)" stroke-width="4" />
-  <rect width="512" height="512" rx="112" fill="url(#coreGlow)" />
+  <!-- Squircle App Icon Base (Apple 1024 standard rx=224) -->
+  <rect width="1024" height="1024" rx="224" fill="url(#appIconBg)" stroke="rgba(255, 255, 255, 0.1)" stroke-width="8" />
+  
+  <!-- Subtle Internal Glow -->
+  <rect width="1024" height="1024" rx="224" fill="url(#glowPulse)" />
 
-  <!-- Subtle Micro Grid Matrix -->
-  <g stroke="rgba(255, 255, 255, 0.03)" stroke-width="1.5">
-    <line x1="128" y1="0" x2="128" y2="512" />
-    <line x1="256" y1="0" x2="256" y2="512" />
-    <line x1="384" y1="0" x2="384" y2="512" />
-    <line x1="0" y1="128" x2="512" y2="128" />
-    <line x1="0" y1="256" x2="512" y2="256" />
-    <line x1="0" y1="384" x2="512" y2="384" />
+  <!-- Background Technical Coordinate Grid (32-Unit Subdivisions) -->
+  <g stroke="rgba(255, 255, 255, 0.025)" stroke-width="2">
+    <line x1="256" y1="0" x2="256" y2="1024" />
+    <line x1="512" y1="0" x2="512" y2="1024" />
+    <line x1="768" y1="0" x2="768" y2="1024" />
+    <line x1="0" y1="256" x2="1024" y2="256" />
+    <line x1="0" y1="512" x2="1024" y2="512" />
+    <line x1="0" y1="768" x2="1024" y2="768" />
   </g>
 
-  <!-- Outer Protective Vault Shield -->
-  <g filter="url(#badgeGlow)">
-    <!-- Shield Background Surface -->
-    <path d="M256 84 L384 144 C384 260 336 348 256 420 C176 348 128 260 128 144 Z" 
-          fill="#0c0d10" 
-          stroke="url(#amberGold)" 
-          stroke-width="10" 
+  <!-- Master Shield Construction -->
+  <g filter="url(#shield3DShadow)">
+    <!-- Vault Outer Hull -->
+    <path d="M512 170 L768 290 C768 530 672 710 512 854 C352 710 256 530 256 290 Z" 
+          fill="url(#shieldFace)" 
+          stroke="url(#appIconAmber)" 
+          stroke-width="22" 
           stroke-linejoin="round" />
   </g>
 
-  <!-- Inner Vault Chamber Rim -->
-  <path d="M256 108 L360 156 C360 250 320 324 256 386 C192 324 152 250 152 156 Z" 
+  <!-- Inner Vault Chamber Recess -->
+  <path d="M512 218 L720 314 C720 510 640 660 512 786 C384 660 304 510 304 314 Z" 
         fill="none" 
         stroke="rgba(255, 255, 255, 0.07)" 
-        stroke-width="3" 
+        stroke-width="6" 
         stroke-linejoin="round" />
 
-  <!-- Cryptographic Biometric Fingerprint Ridges -->
-  <g fill="none" stroke="url(#amberGold)" stroke-linecap="round" stroke-linejoin="round">
-    
-    <!-- Outer Loop (Ridge 1) -->
-    <path d="M200 240 C200 196 225 170 256 170 C287 170 312 196 312 240 C312 284 286 314 256 340 C234 321 216 298 206 270" 
-          stroke-width="7" 
-          stroke-opacity="0.9" />
+  <!-- Cryptographic Biometric Ridges -->
+  <g fill="none" stroke="url(#appIconAmber)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Ridge Loop 1 (Outer) -->
+    <path d="M400 480 C400 392 450 340 512 340 C574 340 624 392 624 480 C624 568 572 628 512 680 C468 642 432 596 412 540" 
+          stroke-width="15" 
+          stroke-opacity="0.92" />
 
-    <!-- Second Loop (Ridge 2) -->
-    <path d="M222 254 C222 224 237 202 256 202 C275 202 290 224 290 254 C290 274 278 296 256 316" 
-          stroke-width="7" 
-          stroke-opacity="0.95" />
+    <!-- Ridge Loop 2 (Middle) -->
+    <path d="M444 508 C444 448 474 404 512 404 C550 404 580 448 580 508 C580 548 556 592 512 632" 
+          stroke-width="15" 
+          stroke-opacity="0.96" />
 
-    <!-- Inner Core Loop (Ridge 3) -->
-    <path d="M242 260 C242 244 248 232 256 232 C264 232 270 244 270 260 C270 274 264 286 256 296" 
-          stroke-width="7" />
+    <!-- Ridge Loop 3 (Inner Core) -->
+    <path d="M484 520 C484 488 496 464 512 464 C528 464 540 488 540 520 C540 548 528 572 512 592" 
+          stroke-width="15" />
 
-    <!-- Top Vault Anchor Crest -->
-    <path d="M256 126 L256 148" stroke-width="6" stroke="url(#amberGold)" />
+    <!-- Top Vault Alignment Axis -->
+    <path d="M512 254 L512 298" stroke-width="12" />
   </g>
 
-  <!-- Verification Proof Starburst / Seal Node (Glowing Central Anchor) -->
-  <g transform="translate(256, 260)">
-    <!-- Subtle Pulse Ring -->
-    <circle r="18" fill="none" stroke="#f59e0b" stroke-width="2" stroke-opacity="0.4" />
-    <circle r="7" fill="#fef08a" />
+  <!-- Radiant Consensus Nodes -->
+  <!-- Center Starburst Node -->
+  <g transform="translate(512, 520)">
+    <circle r="36" fill="none" stroke="#f59e0b" stroke-width="4" stroke-opacity="0.3" />
+    <circle r="14" fill="#fef08a" />
   </g>
 
-  <!-- Top Hardware Consensus Status Dots (Tendermint Triad) -->
-  <circle cx="236" cy="120" r="3.5" fill="#10b981" />
-  <circle cx="256" cy="116" r="4.5" fill="#f59e0b" />
-  <circle cx="276" cy="120" r="3.5" fill="#10b981" />
+  <!-- Tendermint BFT Validator Status Triad -->
+  <circle cx="472" cy="242" r="7" fill="#10b981" />
+  <circle cx="512" cy="234" r="9" fill="#f59e0b" />
+  <circle cx="552" cy="242" r="7" fill="#10b981" />
 
 </svg>
