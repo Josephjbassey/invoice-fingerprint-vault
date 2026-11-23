@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}How It Works & Technical Architecture — Invoice Fingerprint Vault{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16 space-y-16">
+
+    <!-- Header -->
+    <div class="space-y-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface border border-white/[0.08] text-xs text-amber-400 font-mono">
+            <span>Protocol Specification v1.0.0</span>
+            <span>•</span>
+            <span>Gno.land Onyx-1</span>
+        </div>
+        <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+            Security Architecture & <br/>
+            <span class="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
+                Proof-of-Existence Mechanics
+            </span>
+        </h1>
+        <p class="text-base text-zinc-400 max-w-3xl leading-relaxed">
+            A comprehensive technical breakdown of how Invoice Fingerprint Vault leverages client-side SHA-256 cryptographic digests, Gno.land’s persistent AVL tree state machine, and Tendermint ABCI consensus to eliminate invoice fraud without compromising business confidentiality.
+        </p>
+    </div>
+
+    <!-- Threat Model -->
+    <section class="space-y-6">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            1. The Enterprise Invoicing Threat Model
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div class="glass-card rounded-xl p-5 border border-white/[0.08] space-y-2">
+                <h3 class="text-sm font-semibold text-white">Payment Detail Hijacking</h3>
+                <p class="text-xs text-zinc-400 leading-relaxed">
+                    Attackers intercept PDFs in email transit (Man-in-the-Middle) and alter beneficiary bank account details or crypto payout addresses before the accounts payable team executes payment.
+                </p>
+            </div>
+
+            <div class="glass-card rounded-xl p-5 border border-white/[0.08] space-y-2">
+                <h3 class="text-sm font-semibold text-white">Retroactive Backdating</h3>
+                <p class="text-xs text-zinc-400 leading-relaxed">
+                    In tax or contractual disputes, counter-parties forge OS timestamp metadata to argue that an invoice or milestone release agreement was executed prior to an adverse event.
+                </p>
+            </div>
+
+            <div class="glass-card rounded-xl p-5 border border-white/[0.08] space-y-2">
+                <h3 class="text-sm font-semibold text-white">Duplicate Factoring Fraud</h3>
+                <p class="text-xs text-zinc-400 leading-relaxed">
+                    Businesses secretly submit the same invoice to multiple supply chain lenders or factoring firms, claiming distinct collateral across independent siloed platforms.
+                </p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Cryptographic Guarantees -->
+    <section class="space-y-6">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            2. Mathematical Foundations: SHA-256
+        </h2>
+        <div class="glass-card rounded-2xl p-6 sm:p-8 border border-white/[0.08] space-y-4">
+            <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                The vault employs the <strong>NIST FIPS 180-4 SHA-256</strong> cryptographic hash function. Given any input document $M$, the algorithm produces a fixed 256-bit (32-byte) digest $H = \text{SHA256}(M)$, rendered as a 64-character hexadecimal string.
+            </p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div class="p-4 rounded-xl bg-black/30 border border-white/[0.06] space-y-1.5">
+                    <h4 class="text-xs font-semibold text-amber-400 uppercase tracking-wider">Preimage Resistance (Zero-Knowledge)</h4>
+                    <p class="text-xs text-zinc-400 leading-relaxed">
+                        Given $H$, finding any $M$ such that $\text{SHA256}(M) = H$ requires $2^{256}$ operations—computationally impossible. Commercial terms, bank numbers, and client PII remain 100% confidential.
+                    </p>
+                </div>
+                <div class="p-4 rounded-xl bg-black/30 border border-white/[0.06] space-y-1.5">
+                    <h4 class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Collision Resistance (Anti-Tamper)</h4>
+                    <p class="text-xs text-zinc-400 leading-relaxed">
+                        Finding two different documents $M_1 \neq M_2$ with $\text{SHA256}(M_1) = \text{SHA256}(M_2)$ requires $2^{128}$ operations. If a single byte in the invoice is changed, the resulting hash completely diverges.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gno.land State Machine -->
+    <section class="space-y-6">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            3. Gno.land Persistent AVL Tree Architecture
+        </h2>
+        <div class="space-y-4 text-xs sm:text-sm text-zinc-300 leading-relaxed">
+            <p>
+                Unlike standard EVM blockchains that utilize trie structures or sparse mappings, Gno.land smart contracts are written in pure Go (GnoVM) and utilize native balanced AVL Trees (<code class="font-mono text-amber-400">gno.land/p/demo/avl</code>).
+            </p>
+
+            <div class="rounded-xl bg-[#0d0e11] border border-white/[0.08] p-5 font-mono text-xs overflow-x-auto text-zinc-300">
+<pre><code><span class="text-zinc-500">// On-chain schema in gno.land/r/g12uesl2nr27jh8q63x06lrpwarrndwsngm2u3d6/vault</span>
+<span class="text-amber-400">type</span> Record <span class="text-amber-400">struct</span> {
+    Hash       <span class="text-amber-400">string</span>      <span class="text-zinc-500">// 64-character hex SHA-256 digest</span>
+    Submitter  <span class="text-amber-400">std.Address</span> <span class="text-zinc-500">// Bech32 address of signing entity</span>
+    Height     <span class="text-amber-400">int64</span>       <span class="text-zinc-500">// Block height at time of inclusion</span>
+    Timestamp  <span class="text-amber-400">int64</span>       <span class="text-zinc-500">// Unix timestamp of block consensus</span>
+}
+
+<span class="text-zinc-500">// AVL Tree provides O(log N) search and cryptographic state balance</span>
+<span class="text-amber-400">var</span> fingerprints avl.Tree</code></pre>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+                <div class="glass-card rounded-xl p-4 border border-white/[0.08]">
+                    <span class="text-xs font-mono text-amber-400 block mb-1">Deterministic State</span>
+                    <p class="text-xs text-zinc-400">GnoVM executes interpreted Go code without undefined behavior, ensuring identical state across all validator nodes.</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 border border-white/[0.08]">
+                    <span class="text-xs font-mono text-emerald-400 block mb-1">Tendermint BFT Consensus</span>
+                    <p class="text-xs text-zinc-400">Instant finality with zero chain reorgs. Once a block is committed, the document's timestamp is permanent.</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 border border-white/[0.08]">
+                    <span class="text-xs font-mono text-blue-400 block mb-1">ABCI Query Layer</span>
+                    <p class="text-xs text-zinc-400">Anyone can query <code class="font-mono text-zinc-300">/abci_query</code> directly without gas fees or account keys.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Verification Lifecycle Flow -->
+    <section class="space-y-6">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            4. End-to-End Verification Lifecycle
+        </h2>
+        
+        <div class="relative border-l-2 border-white/[0.08] ml-4 pl-6 space-y-8 text-xs sm:text-sm">
+            
+            <div class="relative">
+                <span class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-amber-400 border-4 border-[#08090a]"></span>
+                <h4 class="font-semibold text-white text-base">Step 1: Zero-Knowledge Browser Hashing</h4>
+                <p class="text-zinc-400 mt-1">
+                    When the issuer loads their invoice PDF, the browser’s Web Crypto subsystem executes <code class="font-mono text-zinc-300">crypto.subtle.digest("SHA-256", buffer)</code>. The binary document data never leaves device RAM.
+                </p>
+            </div>
+
+            <div class="relative">
+                <span class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-amber-400 border-4 border-[#08090a]"></span>
+                <h4 class="font-semibold text-white text-base">Step 2: Adena Wallet Non-Repudiation Signing</h4>
+                <p class="text-zinc-400 mt-1">
+                    The user approves an on-chain transaction through the Adena web wallet extension. The message contains <code class="font-mono text-zinc-300">/vm.m_call</code> targeting <code class="font-mono text-amber-400">{{ realm_path }}</code> with method <code class="font-mono text-zinc-300">RegisterFingerprint(hash)</code>.
+                </p>
+            </div>
+
+            <div class="relative">
+                <span class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-amber-400 border-4 border-[#08090a]"></span>
+                <h4 class="font-semibold text-white text-base">Step 3: Tendermint Consensus Inclusion</h4>
+                <p class="text-zinc-400 mt-1">
+                    The transaction is gossiped across Gno validators and included in the next block. The AVL tree is balanced and the state root is updated deterministically.
+                </p>
+            </div>
+
+            <div class="relative">
+                <span class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-emerald-400 border-4 border-[#08090a]"></span>
+                <h4 class="font-semibold text-white text-base">Step 4: Public Audit & Certificate Issuance</h4>
+                <p class="text-zinc-400 mt-1">
+                    Any recipient, auditor, or counter-party uploads the received PDF to the verification portal. If the computed hash matches the Gno.land AVL tree entry, a verifiable cryptographic audit certificate is generated instantly.
+                </p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Testnet Deployments Table -->
+    <section class="space-y-6">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            5. Protocol Deployment Registry (Onyx-1 Testnet)
+        </h2>
+        
+        <div class="glass-card rounded-2xl overflow-hidden border border-white/[0.08]">
+            <table class="w-full text-left text-xs">
+                <tbody class="divide-y divide-white/[0.06]">
+                    <tr class="p-4">
+                        <td class="py-3.5 px-5 font-medium text-zinc-400">Network ID</td>
+                        <td class="py-3.5 px-5 font-mono text-amber-400">onyx-1 (Gno.land Testnet)</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 px-5 font-medium text-zinc-400">Realm Path</td>
+                        <td class="py-3.5 px-5 font-mono text-zinc-200">{{ realm_path }}</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 px-5 font-medium text-zinc-400">Deployer Address</td>
+                        <td class="py-3.5 px-5 font-mono text-zinc-200">g12uesl2nr27jh8q63x06lrpwarrndwsngm2u3d6</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 px-5 font-medium text-zinc-400">Deployment Transaction</td>
+                        <td class="py-3.5 px-5 font-mono text-zinc-400 break-all">8891AF70E1FAE545BA99C37DCE627E0357B94415C2BC3B7CA349ADAFF4F487D3</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 px-5 font-medium text-zinc-400">Public Explorer</td>
+                        <td class="py-3.5 px-5">
+                            <a href="https://gnoscan.io/realms/gno.land/r/g12uesl2nr27jh8q63x06lrpwarrndwsngm2u3d6/vault" 
+                               target="_blank" 
+                               class="text-amber-400 hover:text-amber-300 font-mono">
+                                gnoscan.io/realms/.../vault &rarr;
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Bottom CTA -->
+    <div class="pt-8 border-t border-white/[0.08] flex flex-wrap justify-between items-center gap-4">
+        <div>
+            <h4 class="text-base font-semibold text-white">Ready to anchor your first document?</h4>
+            <p class="text-xs text-zinc-400">Takes less than 15 seconds. No crypto required for verification.</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'upload' %}" class="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-semibold text-xs transition">
+                Anchor Document Now &rarr;
+            </a>
+            <a href="{% url 'verify' %}" class="px-5 py-2.5 rounded-xl bg-surface hover:bg-elevated border border-white/[0.08] text-white font-semibold text-xs transition">
+                Verify Document
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

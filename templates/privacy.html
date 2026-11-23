@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy — Zero-Knowledge & Zero-PII Compliance{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16 space-y-12">
+
+    <!-- Header -->
+    <div class="space-y-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface border border-white/[0.08] text-xs text-emerald-400 font-mono">
+            <span>Zero-Knowledge Architecture</span>
+            <span>•</span>
+            <span>Effective: November 2026</span>
+        </div>
+        <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+            Privacy Policy & <br/>
+            <span class="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                Data Minimization Standard
+            </span>
+        </h1>
+        <p class="text-base text-zinc-400 leading-relaxed">
+            Invoice Fingerprint Vault is architected from first principles under the doctrine of <strong>absolute data minimization</strong>. We believe the safest data is the data that is never collected, stored, or transmitted.
+        </p>
+    </div>
+
+    <!-- Core Privacy Principles -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="glass-card rounded-xl p-6 border border-white/[0.08] space-y-2">
+            <h3 class="text-base font-semibold text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                Zero-Upload Client Processing
+            </h3>
+            <p class="text-xs text-zinc-400 leading-relaxed">
+                When using the client-side hasher or public verification portal, your documents (PDF, JPG, PNG) are processed in your local browser memory via the W3C Web Crypto API. The raw binary never leaves your computer.
+            </p>
+        </div>
+
+        <div class="glass-card rounded-xl p-6 border border-white/[0.08] space-y-2">
+            <h3 class="text-base font-semibold text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                One-Way Preimage Security
+            </h3>
+            <p class="text-xs text-zinc-400 leading-relaxed">
+                Only the 32-byte SHA-256 cryptographic fingerprint is transmitted to the Gno.land blockchain. It is mathematically impossible to reconstruct invoice balances, customer addresses, line items, or tax identifiers from this hash.
+            </p>
+        </div>
+    </div>
+
+    <!-- Detailed Policy Sections -->
+    <div class="space-y-8 text-xs sm:text-sm text-zinc-300 leading-relaxed">
+        
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-white">1. Information We Do NOT Collect</h2>
+            <ul class="list-disc list-inside space-y-2 text-zinc-400 pl-2">
+                <li><strong class="text-zinc-200">No Document Contents:</strong> We do not store invoice bodies, line items, customer identities, payment amounts, or proprietary trade agreements.</li>
+                <li><strong class="text-zinc-200">No Banking or Payment Credentials:</strong> We never handle credit cards, bank account numbers, SWIFT/IBAN identifiers, or custodial wallet private keys.</li>
+                <li><strong class="text-zinc-200">No Tracking Pixels or Ad Telemetry:</strong> We do not integrate Google Analytics, Meta Pixels, or behavioral tracking SDKs.</li>
+            </ul>
+        </section>
+
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-white">2. Information We Process</h2>
+            <p class="text-zinc-400">
+                Depending on your mode of interaction, we process only the bare technical minimum required to perform decentralized consensus:
+            </p>
+            <ul class="list-disc list-inside space-y-2 text-zinc-400 pl-2">
+                <li><strong class="text-zinc-200">Cryptographic Hashes:</strong> 64-character hexadecimal SHA-256 strings submitted to anchor document existence.</li>
+                <li><strong class="text-zinc-200">Public Blockchain Addresses:</strong> Bech32 Gno wallet addresses (<code class="font-mono text-zinc-300">g1...</code>) when signing transactions through Adena wallet.</li>
+                <li><strong class="text-zinc-200">Voluntary Account Credentials:</strong> If you choose to register for an optional hybrid vault account, we store a username and salt-hashed password (via PBKDF2/Argon2) for your personal dashboard.</li>
+            </ul>
+        </section>
+
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-white">3. Public Ledger Transparency & Immutability</h2>
+            <p class="text-zinc-400">
+                Please be aware that any transaction broadcast to the Gno.land network (<code class="font-mono text-zinc-300">onyx-1</code> or mainnet) becomes part of a public, decentralized, and immutable ledger. While your document remains 100% private and undisclosed, the <em>fingerprint</em> and the <em>signing address</em> are publicly visible on-chain.
+            </p>
+        </section>
+
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-white">4. GDPR & CCPA Compliance by Design</h2>
+            <p class="text-zinc-400">
+                Because no Personal Identifiable Information (PII) is committed to the blockchain, Invoice Fingerprint Vault is inherently compliant with global data privacy frameworks including the General Data Protection Regulation (GDPR) Article 25 (Data Protection by Design and by Default) and the California Consumer Privacy Act (CCPA).
+            </p>
+        </section>
+
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-white">5. Cookies and Local Storage</h2>
+            <p class="text-zinc-400">
+                We use strictly necessary first-party session cookies exclusively for user authentication when logged in, and CSRF protection tokens to prevent cross-site request forgery attacks. No marketing or tracking cookies are ever deployed.
+            </p>
+        </section>
+
+    </div>
+
+    <!-- Back to App -->
+    <div class="pt-8 border-t border-white/[0.08] flex items-center justify-between">
+        <a href="{% url 'home' %}" class="text-xs text-amber-400 hover:text-amber-300 font-medium">
+            &larr; Back to Home Overview
+        </a>
+        <a href="{% url 'terms' %}" class="text-xs text-zinc-400 hover:text-white font-medium">
+            View Terms of Service &rarr;
+        </a>
+    </div>
+
+</div>
+{% endblock %}

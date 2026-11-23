@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -15,22 +14,29 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='InvoiceVaultEntry',
+            name="InvoiceVaultEntry",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('document_name', models.CharField(max_length=255)),
-                ('fingerprint', models.CharField(db_index=True, max_length=64)),
-                ('timestamp', models.DateTimeField(auto_now_add=True)),
-                ('submitter_address', models.CharField(max_length=255)),
-                ('tx_hash', models.CharField(blank=True, max_length=255)),
-                ('gnoscan_link', models.URLField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='vault_entries', to=settings.AUTH_USER_MODEL)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("document_name", models.CharField(max_length=255)),
+                ("fingerprint", models.CharField(db_index=True, max_length=64)),
+                ("timestamp", models.DateTimeField(auto_now_add=True)),
+                ("submitter_address", models.CharField(max_length=255)),
+                ("tx_hash", models.CharField(blank=True, max_length=255)),
+                ("gnoscan_link", models.URLField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="vault_entries",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
-                'unique_together': {('user', 'fingerprint')},
+                "ordering": ["-created_at"],
+                "unique_together": {("user", "fingerprint")},
             },
         ),
     ]

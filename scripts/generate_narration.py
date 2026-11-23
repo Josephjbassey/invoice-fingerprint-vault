@@ -38,13 +38,14 @@ SCENES = {
         "AVL tree storage. The off-chain vault provides clean user dashboards and instant querying. "
         "Next, we plan to support batch invoice timestamping and GRC-20 micro-payments for commercial registries. "
         "Thanks for watching!"
-    )
+    ),
 }
+
 
 async def generate_all():
     os.makedirs("media/audio", exist_ok=True)
     full_audio_files = []
-    
+
     for scene_id, text in SCENES.items():
         out_path = f"media/audio/{scene_id}.mp3"
         print(f"Generating audio for {scene_id}...")
@@ -60,6 +61,7 @@ async def generate_all():
     comm_full = edge_tts.Communicate(full_text, VOICE, rate="+0%", pitch="+0Hz")
     await comm_full.save(full_path)
     print(f"Saved full continuous narration: {full_path}")
+
 
 if __name__ == "__main__":
     asyncio.run(generate_all())

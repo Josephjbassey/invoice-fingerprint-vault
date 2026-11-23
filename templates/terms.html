@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Terms of Service — Decentralized Proof-of-Existence Protocol{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16 space-y-12">
+
+    <!-- Header -->
+    <div class="space-y-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface border border-white/[0.08] text-xs text-amber-400 font-mono">
+            <span>Protocol Terms & Disclaimer</span>
+            <span>•</span>
+            <span>Revision: 1.0.0</span>
+        </div>
+        <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+            Terms of Service & <br/>
+            <span class="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
+                Proof-of-Existence Disclaimers
+            </span>
+        </h1>
+        <p class="text-base text-zinc-400 leading-relaxed">
+            Please read these terms carefully before interacting with the Invoice Fingerprint Vault smart contract realm or using the web application interface.
+        </p>
+    </div>
+
+    <!-- Important Alerts -->
+    <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 leading-relaxed flex items-start gap-3">
+        <svg class="w-5 h-5 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        </svg>
+        <div>
+            <strong class="font-semibold block mb-0.5">Testnet Operating Notice:</strong>
+            Invoice Fingerprint Vault currently executes against the public Gno.land <code>onyx-1</code> testnet. Testnet GNOT tokens possess zero economic value and testnet state may be periodically reset by network validators.
+        </div>
+    </div>
+
+    <!-- Terms Body -->
+    <div class="space-y-8 text-xs sm:text-sm text-zinc-300 leading-relaxed">
+        
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-white">1. Nature of the Service (Non-Custodial Proof-of-Existence)</h2>
+            <p class="text-zinc-400">
+                Invoice Fingerprint Vault provides a decentralized cryptographic notary service. Submitting a document generates a mathematical SHA-256 fingerprint that is recorded in an on-chain AVL tree on the Gno.land blockchain.
+            </p>
+            <p class="text-zinc-400">
+                The smart contract proves <strong>existence and data integrity at a specific block timestamp</strong>. It does not constitute legal title, governmental licensing, or automated settlement of invoices.
+            </p>
+        </section>
+
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-white">2. User Custody of Original Files</h2>
+            <p class="text-zinc-400">
+                Because Invoice Fingerprint Vault enforces strict Zero-Knowledge principles, <strong>we do not store or host your original invoice files</strong>.
+            </p>
+            <p class="text-zinc-400">
+                You are solely responsible for archiving and preserving the original unmodified documents. Because cryptographic hashes are one-way functions, lost documents cannot be recovered from their hash under any circumstances.
+            </p>
+        </section>
+
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-white">3. Self-Sovereign Wallet Security</h2>
+            <p class="text-zinc-400">
+                When using the Adena web wallet or interacting with the Gno.land blockchain directly, you retain sole custody of your private keys and seed phrases. We have no authority or technical capability to reverse, modify, or cancel confirmed on-chain transactions.
+            </p>
+        </section>
+
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-white">4. Open Source & Disclaimer of Warranties</h2>
+            <p class="text-zinc-400">
+                This project was created for the <strong>Gno.land Hackathon 2026</strong> and is licensed under the permissive MIT Open Source License.
+            </p>
+            <div class="p-4 rounded-xl bg-black/40 border border-white/[0.06] font-mono text-xs text-zinc-400 leading-relaxed">
+                THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY.
+            </div>
+        </section>
+
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-white">5. Governing Network Protocol</h2>
+            <p class="text-zinc-400">
+                All consensus rules, block finality, and state transitions are governed autonomously by the Gno.land Tendermint BFT network and GnoVM execution environment.
+            </p>
+        </section>
+
+    </div>
+
+    <!-- Back to App -->
+    <div class="pt-8 border-t border-white/[0.08] flex items-center justify-between">
+        <a href="{% url 'home' %}" class="text-xs text-amber-400 hover:text-amber-300 font-medium">
+            &larr; Back to Home Overview
+        </a>
+        <a href="{% url 'privacy' %}" class="text-xs text-zinc-400 hover:text-white font-medium">
+            View Privacy Policy &rarr;
+        </a>
+    </div>
+
+</div>
+{% endblock %}

@@ -11,6 +11,7 @@ SAMPLE_INVOICE = os.path.abspath("sample_invoices/invoice_apex_design_101.pdf")
 FINGERPRINT = "53ed60e76da28e574e533a9dd80a8dc13012aafaee8652e488c0bb5287b54d4c"
 ADENA_WALLET = "g1ryq6ldrlwtsvp0mhs5r8g7qflp2upe4lw57zk2"
 
+
 def record_walkthrough():
     os.makedirs(RAW_VIDEO_DIR, exist_ok=True)
     # Clear out any previous raw webm files
@@ -21,14 +22,12 @@ def record_walkthrough():
     print("Starting Playwright recording session...")
     with sync_playwright() as p:
         browser = p.chromium.launch(
-            executable_path='/usr/bin/chromium',
-            headless=True,
-            args=['--no-sandbox', '--disable-setuid-sandbox']
+            executable_path="/usr/bin/chromium", headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"]
         )
         context = browser.new_context(
             record_video_dir=RAW_VIDEO_DIR,
-            record_video_size={'width': 1920, 'height': 1080},
-            viewport={'width': 1920, 'height': 1080}
+            record_video_size={"width": 1920, "height": 1080},
+            viewport={"width": 1920, "height": 1080},
         )
 
         # Inject Adena wallet mock for seamless interaction
@@ -91,11 +90,11 @@ def record_walkthrough():
         print("Recording Scene 2: Upload & Instant Client-side Fingerprinting...")
         page.goto("http://127.0.0.1:8000/upload/")
         time.sleep(4)
-        
+
         # Smooth mouse movement to the dropzone
         page.mouse.move(960, 400)
         time.sleep(2)
-        
+
         # Set file input
         file_input = page.locator("#file-input")
         file_input.set_input_files(SAMPLE_INVOICE)
@@ -117,11 +116,11 @@ def record_walkthrough():
         adena_btn.hover()
         time.sleep(2)
         adena_btn.click()
-        
+
         # Wait for transition to success page
         page.wait_for_selector("h1:has-text('Document Registered!')", timeout=10000)
         time.sleep(4)
-        
+
         # Hover over the registered certificate details
         page.mouse.move(960, 460)
         time.sleep(5)
@@ -181,30 +180,41 @@ def record_walkthrough():
 
     print("Browser closed. Raw recording saved.")
 
+
 def mux_final_video():
     # Find recorded webm file
     webm_files = [f for f in os.listdir(RAW_VIDEO_DIR) if f.endswith(".webm")]
     if not webm_files:
         raise FileNotFoundError("No raw webm file found in RAW_VIDEO_DIR")
-    
+
     raw_video = os.path.join(RAW_VIDEO_DIR, webm_files[0])
     print(f"Muxing {raw_video} with {AUDIO_TRACK} into {OUTPUT_VIDEO}...")
 
     cmd = [
-        "ffmpeg", "-y",
-        "-i", raw_video,
-        "-i", AUDIO_TRACK,
-        "-c:v", "libx264",
-        "-pix_fmt", "yuv420p",
-        "-preset", "medium",
-        "-crf", "22",
-        "-c:a", "aac",
-        "-b:a", "192k",
+        "ffmpeg",
+        "-y",
+        "-i",
+        raw_video,
+        "-i",
+        AUDIO_TRACK,
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "-preset",
+        "medium",
+        "-crf",
+        "22",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "192k",
         "-shortest",
-        OUTPUT_VIDEO
+        OUTPUT_VIDEO,
     ]
     subprocess.run(cmd, check=True)
     print(f"Successfully generated final demo video: {OUTPUT_VIDEO}")
+
 
 if __name__ == "__main__":
     record_walkthrough()

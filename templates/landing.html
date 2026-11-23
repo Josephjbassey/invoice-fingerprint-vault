@@ -1,0 +1,517 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice Fingerprint Vault — Decentralized Proof-of-Existence on Gno.land{% endblock %}
+
+{% block content %}
+<div class="relative overflow-hidden">
+
+    <!-- HERO SECTION -->
+    <section class="pt-12 pb-20 lg:pt-20 lg:pb-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Live Onyx-1 Status Badge -->
+        <div class="flex justify-center mb-8">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface border border-white/[0.08] shadow-inner-border text-xs text-zinc-300 backdrop-blur-md">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span class="font-medium text-white">Gno.land Testnet (onyx-1)</span>
+                <span class="text-zinc-600">|</span>
+                <span class="font-mono text-amber-400">Block #{{ rpc_status.block_height|default:"1,350,400" }}</span>
+                <span class="text-zinc-600">|</span>
+                <span class="text-zinc-400">{{ total_count|default:"3" }} Proofs Anchored</span>
+            </div>
+        </div>
+
+        <!-- Main Headline & Subtitle -->
+        <div class="text-center max-w-4xl mx-auto space-y-6">
+            <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.1]">
+                Tamper-Proof Document <br/>
+                <span class="bg-gradient-to-r from-amber-400 via-orange-400 to-amber-200 bg-clip-text text-transparent">
+                    Fingerprinting on Gno.land
+                </span>
+            </h1>
+            <p class="text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto font-normal leading-relaxed">
+                Anchor cryptographic SHA-256 hashes of invoices, audit receipts, and commercial contracts directly into Gno’s persistent AVL tree.
+                <span class="text-zinc-200 font-medium">100% Zero-Knowledge. Zero PII transmitted. Instant global verification.</span>
+            </p>
+
+            <!-- Hero CTAs -->
+            <div class="pt-4 flex flex-wrap justify-center gap-4">
+                <a href="{% url 'upload' %}" 
+                   class="inline-flex items-center px-6 py-3.5 rounded-xl text-sm font-semibold text-zinc-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 shadow-lg shadow-amber-500/20 hover:scale-[1.02] active:scale-[0.98] transition">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Anchor a Document Now
+                </a>
+                <a href="{% url 'verify' %}" 
+                   class="inline-flex items-center px-6 py-3.5 rounded-xl text-sm font-semibold text-white bg-surface hover:bg-elevated border border-white/[0.08] hover:border-white/20 transition">
+                    <svg class="w-4 h-4 mr-2 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Verify Existing Proof
+                </a>
+                <a href="{% url 'how_it_works' %}" 
+                   class="inline-flex items-center px-5 py-3.5 rounded-xl text-sm font-medium text-zinc-400 hover:text-white transition">
+                    Protocol Architecture &rarr;
+                </a>
+            </div>
+        </div>
+
+        <!-- HERO INTERACTIVE DEMO: CLIENT-SIDE ZERO-KNOWLEDGE DRAG & DROP -->
+        <div class="mt-16 max-w-3xl mx-auto">
+            <div class="glass-card rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden border border-white/[0.08]">
+                
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-white/[0.06]">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/70 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/70 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/70 inline-block"></span>
+                        <span class="ml-2 text-xs font-mono text-zinc-400">live-client-hasher.wasm</span>
+                    </div>
+                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
+                        Zero-Upload • Client-Side Only
+                    </span>
+                </div>
+
+                <!-- Dropzone Box -->
+                <div id="hero-dropzone" 
+                     class="border-2 border-dashed border-zinc-700 hover:border-amber-500/60 rounded-xl p-8 text-center transition cursor-pointer bg-black/20 group">
+                    <input type="file" id="hero-file-input" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.txt">
+                    <div class="flex flex-col items-center">
+                        <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-3 group-hover:scale-110 transition">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                        </div>
+                        <p class="text-sm font-medium text-white mb-1">
+                            Drop any invoice or file here to calculate its SHA-256 fingerprint
+                        </p>
+                        <p class="text-xs text-zinc-500">
+                            Processed 100% in your browser memory via Web Crypto API. File never touches any server.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Live Hash Result Display -->
+                <div id="hero-result-box" class="hidden mt-6 pt-5 border-t border-white/[0.06] space-y-4">
+                    <div>
+                        <div class="flex justify-between items-center text-xs mb-1">
+                            <span class="text-zinc-400">Computed SHA-256 Fingerprint:</span>
+                            <span id="hero-file-meta" class="text-zinc-500 font-mono"></span>
+                        </div>
+                        <div class="p-3 bg-black/40 rounded-lg border border-white/[0.06] flex items-center justify-between gap-3">
+                            <span id="hero-hash-display" class="font-mono text-xs text-amber-400 break-all select-all"></span>
+                            <button id="copy-hero-hash-btn" 
+                                    class="text-xs px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition shrink-0"
+                                    title="Copy Hash">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-3 pt-1">
+                        <a id="hero-verify-link" href="#" 
+                           class="flex-1 text-center px-4 py-2 rounded-lg bg-surface hover:bg-elevated border border-white/[0.08] text-xs font-semibold text-white transition">
+                            Check Verification Status &rarr;
+                        </a>
+                        <a id="hero-anchor-link" href="#" 
+                           class="flex-1 text-center px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-xs font-semibold text-zinc-950 transition">
+                            Sign & Anchor on Gno.land &rarr;
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </section>
+
+    <!-- PRE-LOADED REAL SAMPLE INVOICES SHOWCASE -->
+    <section class="py-16 border-t border-white/[0.06] bg-surface/40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <h2 class="text-xs uppercase tracking-widest text-amber-400 font-semibold mb-2">Instant Interactive Testnet Proofs</h2>
+                <h3 class="text-2xl sm:text-3xl font-bold text-white">Pre-Anchored Sample Invoices</h3>
+                <p class="text-sm text-zinc-400 mt-2">
+                    Test the verification engine with real sample documents pre-seeded in the Onyx-1 vault.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {% for sample in sample_invoices %}
+                <div class="glass-card rounded-xl p-6 border border-white/[0.08] hover:border-amber-500/40 transition flex flex-col justify-between group">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <span class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-xs font-mono font-bold">
+                                PDF
+                            </span>
+                            <span class="text-xs font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                {{ sample.amount }}
+                            </span>
+                        </div>
+                        <h4 class="text-base font-semibold text-white group-hover:text-amber-400 transition">
+                            {{ sample.title }}
+                        </h4>
+                        <p class="text-xs text-zinc-400 line-clamp-2">
+                            {{ sample.description }}
+                        </p>
+                        <div class="pt-2">
+                            <span class="text-[10px] text-zinc-500 uppercase tracking-wider block mb-1">SHA-256 Fingerprint</span>
+                            <div class="bg-black/30 p-2 rounded border border-white/[0.04] text-[11px] font-mono text-zinc-400 truncate select-all">
+                                {{ sample.hash }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between gap-2">
+                        <a href="{{ sample.file_url }}" target="_blank" download
+                           class="text-xs text-zinc-400 hover:text-white px-2.5 py-1.5 rounded hover:bg-zinc-800 transition flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            PDF ({{ sample.size }})
+                        </a>
+                        <a href="{% url 'verify' %}?hash={{ sample.hash }}" 
+                           class="text-xs font-semibold text-amber-400 hover:text-amber-300 px-3 py-1.5 rounded bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition flex items-center gap-1">
+                            Verify Proof &rarr;
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- TRUST & PROTOCOL METRICS (4-CARD GRID) -->
+    <section class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <h2 class="text-xs uppercase tracking-widest text-amber-400 font-semibold mb-2">Cryptographic Foundations</h2>
+            <h3 class="text-3xl font-bold text-white">Engineered for Sovereign Compliance</h3>
+            <p class="text-sm text-zinc-400 mt-2">
+                Combining NIST-standard hashing with Gno.land’s deterministic Go VM state persistence.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            <div class="glass-card rounded-2xl p-6 border border-white/[0.08] space-y-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+                <h4 class="text-lg font-semibold text-white">100% Zero-Knowledge</h4>
+                <p class="text-xs text-zinc-400 leading-relaxed">
+                    Documents are hashed locally in browser RAM. Zero commercial terms, banking accounts, or client names ever leave your device.
+                </p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-6 border border-white/[0.08] space-y-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                </div>
+                <h4 class="text-lg font-semibold text-white">Gno.land AVL Tree</h4>
+                <p class="text-xs text-zinc-400 leading-relaxed">
+                    Anchored into Gno’s native balanced binary search tree (<code class="font-mono text-zinc-300">avl.Tree</code>) for permanent, deterministic O(log N) state proofs.
+                </p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-6 border border-white/[0.08] space-y-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <h4 class="text-lg font-semibold text-white">&lt; 1.2s ABCI Verification</h4>
+                <p class="text-xs text-zinc-400 leading-relaxed">
+                    Verify fingerprints without paying gas. Direct Tendermint ABCI query endpoints resolve existing proofs in sub-second latency.
+                </p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-6 border border-white/[0.08] space-y-3">
+                <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                </div>
+                <h4 class="text-lg font-semibold text-white">Adena Wallet Identity</h4>
+                <p class="text-xs text-zinc-400 leading-relaxed">
+                    Submissions are signed via Ed25519/Secp256k1 keypairs from Adena wallet, providing cryptographic non-repudiation of the issuer.
+                </p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- PROBLEM VS SOLUTION COMPARISON -->
+    <section class="py-20 border-t border-white/[0.06] bg-surface/30">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-xs uppercase tracking-widest text-amber-400 font-semibold mb-2">The Invoicing Dilemma</h2>
+                <h3 class="text-3xl font-bold text-white">Why Email Invoices Fail vs The Vault Standard</h3>
+            </div>
+
+            <div class="glass-card rounded-2xl overflow-hidden border border-white/[0.08]">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="border-b border-white/[0.08] bg-black/40 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                            <th class="py-4 px-6">Vulnerability Vector</th>
+                            <th class="py-4 px-6 text-red-400">Traditional PDF / Email</th>
+                            <th class="py-4 px-6 text-emerald-400">Invoice Fingerprint Vault</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/[0.06] text-xs">
+                        <tr>
+                            <td class="py-4 px-6 font-medium text-white">Post-Issuance Tampering</td>
+                            <td class="py-4 px-6 text-zinc-400">PDF amounts or bank details edited via Acrobat in transit.</td>
+                            <td class="py-4 px-6 text-emerald-300 font-medium">Any byte change produces completely different SHA-256 hash.</td>
+                        </tr>
+                        <tr>
+                            <td class="py-4 px-6 font-medium text-white">Audit Timestamp Dispute</td>
+                            <td class="py-4 px-6 text-zinc-400">File creation dates easily forged or backdated on OS disk.</td>
+                            <td class="py-4 px-6 text-emerald-300 font-medium">Timestamp irrevocably cemented into Gno.land block height.</td>
+                        </tr>
+                        <tr>
+                            <td class="py-4 px-6 font-medium text-white">Double-Financing / Factoring</td>
+                            <td class="py-4 px-6 text-zinc-400">Same invoice submitted to multiple lenders without detection.</td>
+                            <td class="py-4 px-6 text-emerald-300 font-medium">Collision-resistant global on-chain index flags duplicate claims.</td>
+                        </tr>
+                        <tr>
+                            <td class="py-4 px-6 font-medium text-white">Confidentiality & Privacy</td>
+                            <td class="py-4 px-6 text-zinc-400">Third-party audit portals ingest and store raw client financial data.</td>
+                            <td class="py-4 px-6 text-emerald-300 font-medium">Zero-Knowledge: only 32-byte digest is committed to the blockchain.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3-STEP WALKTHROUGH -->
+    <section class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <h2 class="text-xs uppercase tracking-widest text-amber-400 font-semibold mb-2">Simple Workflow</h2>
+            <h3 class="text-3xl font-bold text-white">Three Steps to Cryptographic Certainty</h3>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            <div class="space-y-4">
+                <div class="w-12 h-12 rounded-xl bg-surface border border-white/[0.08] flex items-center justify-center font-mono text-amber-400 font-bold text-lg">
+                    01
+                </div>
+                <h4 class="text-xl font-semibold text-white">Client-Side Hashing</h4>
+                <p class="text-xs text-zinc-400 leading-relaxed">
+                    You drop your invoice PDF into the vault. The browser computes a 256-bit hash in milliseconds. Your document never leaves your machine.
+                </p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="w-12 h-12 rounded-xl bg-surface border border-white/[0.08] flex items-center justify-center font-mono text-amber-400 font-bold text-lg">
+                    02
+                </div>
+                <h4 class="text-xl font-semibold text-white">Adena On-Chain Anchor</h4>
+                <p class="text-xs text-zinc-400 leading-relaxed">
+                    You approve a transaction via Adena wallet to call <code class="font-mono text-zinc-300">vault:RegisterFingerprint</code>. The hash is saved permanently in Gno’s AVL tree.
+                </p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="w-12 h-12 rounded-xl bg-surface border border-white/[0.08] flex items-center justify-center font-mono text-amber-400 font-bold text-lg">
+                    03
+                </div>
+                <h4 class="text-xl font-semibold text-white">Instant Global Verification</h4>
+                <p class="text-xs text-zinc-400 leading-relaxed">
+                    Anyone—clients, auditors, tax authorities—can upload the same file or input the hash on the public verification portal to mathematically prove authenticity.
+                </p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- SMART CONTRACT CODE PREVIEW -->
+    <section class="py-16 border-t border-white/[0.06] bg-black/40">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-white">Smart Contract Implementation</h3>
+                    <p class="text-xs font-mono text-zinc-400">gno.land/r/g12uesl2nr27jh8q63x06lrpwarrndwsngm2u3d6/vault/vault.gno</p>
+                </div>
+                <a href="https://gnoscan.io/realms/gno.land/r/g12uesl2nr27jh8q63x06lrpwarrndwsngm2u3d6/vault" 
+                   target="_blank" 
+                   class="text-xs text-amber-400 hover:text-amber-300 font-mono flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface border border-white/[0.08] transition">
+                    View on GnoScan &rarr;
+                </a>
+            </div>
+
+            <div class="rounded-xl bg-[#0d0e11] border border-white/[0.08] p-5 font-mono text-xs overflow-x-auto text-zinc-300 leading-relaxed">
+<pre class="text-zinc-300"><code><span class="text-amber-400">package</span> vault
+
+<span class="text-amber-400">import</span> (
+    <span class="text-emerald-400">"std"</span>
+    <span class="text-emerald-400">"gno.land/p/demo/avl"</span>
+)
+
+<span class="text-zinc-500">// Persistent AVL Tree holding document hash -&gt; metadata</span>
+<span class="text-amber-400">var</span> fingerprints avl.Tree
+
+<span class="text-zinc-500">// RegisterFingerprint anchors a SHA-256 hash into Gno VM state</span>
+<span class="text-amber-400">func</span> <span class="text-blue-400">RegisterFingerprint</span>(hash <span class="text-amber-400">string</span>) <span class="text-amber-400">string</span> {
+    caller := std.PrevRealm().Addr()
+    <span class="text-amber-400">if</span> fingerprints.Has(hash) {
+        <span class="text-amber-400">panic</span>(<span class="text-emerald-400">"fingerprint already anchored in vault"</span>)
+    }
+    blockHeight := std.GetHeight()
+    fingerprints.Set(hash, Record{
+        Submitter: caller,
+        Height:    blockHeight,
+    })
+    <span class="text-amber-400">return</span> <span class="text-emerald-400">"anchored_at_block:"</span> + std.Itoa(blockHeight)
+}</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ ACCORDION -->
+    <section class="py-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-14">
+            <h2 class="text-xs uppercase tracking-widest text-amber-400 font-semibold mb-2">Common Questions</h2>
+            <h3 class="text-3xl font-bold text-white">Frequently Asked Questions</h3>
+        </div>
+
+        <div class="space-y-4">
+            
+            <details class="glass-card rounded-xl border border-white/[0.08] p-5 group [&_summary::-webkit-details-marker]:hidden cursor-pointer">
+                <summary class="flex justify-between items-center text-sm font-semibold text-white">
+                    <span>Does anyone see my invoice amount, bank details, or client name?</span>
+                    <span class="transition group-open:rotate-180 text-zinc-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </span>
+                </summary>
+                <p class="text-xs text-zinc-400 mt-3 leading-relaxed">
+                    No. The SHA-256 hashing algorithm is a one-way cryptographic function. Only the 64-character hexadecimal digest is recorded on Gno.land. It is mathematically impossible to reverse-engineer or reconstruct the invoice content from the hash.
+                </p>
+            </details>
+
+            <details class="glass-card rounded-xl border border-white/[0.08] p-5 group [&_summary::-webkit-details-marker]:hidden cursor-pointer">
+                <summary class="flex justify-between items-center text-sm font-semibold text-white">
+                    <span>What happens if someone modifies a single comma or dollar value in the PDF?</span>
+                    <span class="transition group-open:rotate-180 text-zinc-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </span>
+                </summary>
+                <p class="text-xs text-zinc-400 mt-3 leading-relaxed">
+                    Due to the cryptographic "avalanche effect", altering even a single bit in the file results in an entirely different SHA-256 fingerprint. The verification portal will immediately detect the mismatch and confirm the document has been tampered with.
+                </p>
+            </details>
+
+            <details class="glass-card rounded-xl border border-white/[0.08] p-5 group [&_summary::-webkit-details-marker]:hidden cursor-pointer">
+                <summary class="flex justify-between items-center text-sm font-semibold text-white">
+                    <span>Do I need GNOT tokens to verify an invoice?</span>
+                    <span class="transition group-open:rotate-180 text-zinc-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </span>
+                </summary>
+                <p class="text-xs text-zinc-400 mt-3 leading-relaxed">
+                    No! Public verification is completely free and requires zero gas. It queries the Gno.land node state directly via read-only ABCI RPC calls. Only anchoring a new document requires a tiny gas fee signed via Adena.
+                </p>
+            </details>
+
+            <details class="glass-card rounded-xl border border-white/[0.08] p-5 group [&_summary::-webkit-details-marker]:hidden cursor-pointer">
+                <summary class="flex justify-between items-center text-sm font-semibold text-white">
+                    <span>Can I use this without a crypto wallet?</span>
+                    <span class="transition group-open:rotate-180 text-zinc-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </span>
+                </summary>
+                <p class="text-xs text-zinc-400 mt-3 leading-relaxed">
+                    Yes. The platform supports a hybrid architecture: you can register with a standard email/password to generate and archive cryptographic audit certificates, or connect an Adena wallet for sovereign non-custodial on-chain signing.
+                </p>
+            </details>
+
+        </div>
+    </section>
+
+    <!-- ROADMAP BANNER -->
+    <section class="py-16 border-t border-white/[0.06] bg-surface/20">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+            <h3 class="text-2xl font-bold text-white">Transitioning to Gno.land Mainnet</h3>
+            <p class="text-sm text-zinc-400 max-w-2xl mx-auto">
+                Currently operating live on the Onyx-1 Testnet. Moving to Gno.land mainnet with Merkle batch anchoring for enterprise ERP integration (SAP, QuickBooks, Stripe).
+            </p>
+            <div class="flex justify-center gap-4">
+                <a href="{% url 'upload' %}" 
+                   class="px-6 py-3 rounded-xl text-sm font-semibold text-zinc-950 bg-amber-400 hover:bg-amber-300 transition">
+                    Get Started Today
+                </a>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<!-- Client-side WebCrypto Hasher Script -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const dropzone = document.getElementById('hero-dropzone');
+    const fileInput = document.getElementById('hero-file-input');
+    const resultBox = document.getElementById('hero-result-box');
+    const hashDisplay = document.getElementById('hero-hash-display');
+    const fileMeta = document.getElementById('hero-file-meta');
+    const copyBtn = document.getElementById('copy-hero-hash-btn');
+    const verifyLink = document.getElementById('hero-verify-link');
+    const anchorLink = document.getElementById('hero-anchor-link');
+
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('border-amber-400', 'bg-amber-500/5');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('border-amber-400', 'bg-amber-500/5');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('border-amber-400', 'bg-amber-500/5');
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            processFile(e.dataTransfer.files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files && fileInput.files.length > 0) {
+            processFile(fileInput.files[0]);
+        }
+    });
+
+    async function processFile(file) {
+        fileMeta.innerText = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        const buffer = await file.arrayBuffer();
+        const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        hashDisplay.innerText = hashHex;
+        verifyLink.href = `{% url 'verify' %}?hash=${hashHex}`;
+        anchorLink.href = `{% url 'upload' %}?hash=${hashHex}&name=${encodeURIComponent(file.name)}`;
+        resultBox.classList.remove('hidden');
+    }
+
+    copyBtn.addEventListener('click', () => {
+        const text = hashDisplay.innerText;
+        if (text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("SHA-256 hash copied to clipboard!");
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

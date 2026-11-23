@@ -1,19 +1,19 @@
 {% extends 'base.html' %}
 
-{% block title %}Create Account | Invoice Fingerprint Vault{% endblock %}
+{% block title %}Create Account — Invoice Fingerprint Vault{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto space-y-6 pt-6">
-    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 space-y-6">
+<div class="max-w-md mx-auto space-y-6 pt-10 pb-16">
+    <div class="glass-card rounded-2xl p-8 space-y-6 border border-white/[0.08] shadow-2xl">
         <div class="text-center space-y-1">
-            <h1 class="text-2xl font-bold text-white">Create Account</h1>
-            <p class="text-xs text-zinc-400">Join the decentralized invoice registry</p>
+            <h1 class="text-2xl font-extrabold text-white">Create Account</h1>
+            <p class="text-xs text-zinc-400">Join the decentralized invoice notary vault</p>
         </div>
 
         <form method="POST" class="space-y-4">
             {% csrf_token %}
             {% if form.errors %}
-            <div class="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-xs text-red-400 space-y-1">
+            <div class="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400 space-y-1">
                 {% for field in form %}
                     {% for error in field.errors %}
                     <p>{{ error }}</p>
@@ -23,27 +23,31 @@
             {% endif %}
 
             <div>
-                <label class="block text-xs uppercase font-medium text-zinc-400 mb-1">Username</label>
-                <input type="text" name="username" required class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500">
+                <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1 tracking-wider text-[11px]">Username</label>
+                <input type="text" name="username" required 
+                       class="w-full px-3.5 py-2.5 bg-[#0d0e11] border border-white/[0.08] rounded-xl text-white text-xs focus:outline-none focus:border-amber-400 transition font-mono">
             </div>
 
             <div>
-                <label class="block text-xs uppercase font-medium text-zinc-400 mb-1">Password</label>
-                <input type="password" name="password1" required class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500">
+                <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1 tracking-wider text-[11px]">Password</label>
+                <input type="password" name="password1" required 
+                       class="w-full px-3.5 py-2.5 bg-[#0d0e11] border border-white/[0.08] rounded-xl text-white text-xs focus:outline-none focus:border-amber-400 transition">
             </div>
 
             <div>
-                <label class="block text-xs uppercase font-medium text-zinc-400 mb-1">Confirm Password</label>
-                <input type="password" name="password2" required class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500">
+                <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1 tracking-wider text-[11px]">Confirm Password</label>
+                <input type="password" name="password2" required 
+                       class="w-full px-3.5 py-2.5 bg-[#0d0e11] border border-white/[0.08] rounded-xl text-white text-xs focus:outline-none focus:border-amber-400 transition">
             </div>
 
-            <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm transition shadow-lg shadow-amber-500/20">
-                Register & Get Started
+            <button type="submit" 
+                    class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-zinc-950 font-bold text-xs transition shadow-lg shadow-amber-500/20">
+                Register & Initialize Vault
             </button>
         </form>
 
-        <div class="text-center text-xs text-zinc-500">
-            Already have an account? <a href="{% url 'login' %}" class="text-amber-400 hover:underline">Sign In</a>
+        <div class="text-center text-xs text-zinc-500 pt-2 border-t border-white/[0.06]">
+            Already have an account? <a href="{% url 'login' %}" class="text-amber-400 hover:text-amber-300 font-medium">Sign In</a>
         </div>
     </div>
 </div>

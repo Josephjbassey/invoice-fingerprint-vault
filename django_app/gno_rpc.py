@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 DEPLOYED_BLOCK = "1350400"
 DEPLOYED_TX = "8891AF70E1FAE545BA99C37DCE627E0357B94415C2BC3B7CA349ADAFF4F487D3"
-HEX_SHA256_PATTERN = re.compile(r'^[a-fA-F0-9]{64}$')
+HEX_SHA256_PATTERN = re.compile(r"^[a-fA-F0-9]{64}$")
 
 
 def get_rpc_status() -> dict[str, Any]:
@@ -38,7 +38,7 @@ def get_rpc_status() -> dict[str, Any]:
             }
     except requests.RequestException as e:
         logger.warning("Failed to contact Gno RPC /status: %s", e)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error("Unexpected error contacting Gno RPC: %s", e)
 
     return {
@@ -57,7 +57,7 @@ def query_realm_render(path_arg: str = "") -> dict[str, Any]:
     pkg_path = settings.GNO_REALM_PATH
     query_str = f"{pkg_path}:{path_arg}"
     b64_data = base64.b64encode(query_str.encode("utf-8")).decode("utf-8")
-    
+
     url = f"{settings.GNO_RPC_URL}/abci_query"
     params = {
         "path": '"vm/qrender"',
@@ -70,7 +70,7 @@ def query_realm_render(path_arg: str = "") -> dict[str, Any]:
             err = res_json.get("error")
             if err:
                 return {"success": False, "error": err.get("message", "RPC Error")}
-            
+
             resp_base = res_json.get("result", {}).get("response", {}).get("ResponseBase", {})
             log_msg = resp_base.get("Log", "")
             if resp_base.get("Error") or "package not found" in log_msg:
@@ -80,7 +80,7 @@ def query_realm_render(path_arg: str = "") -> dict[str, Any]:
                     "is_parked": True,
                     "log": log_msg,
                 }
-            
+
             raw_data = resp_base.get("Data")
             if raw_data:
                 decoded = base64.b64decode(raw_data).decode("utf-8", errors="replace")
@@ -91,7 +91,7 @@ def query_realm_render(path_arg: str = "") -> dict[str, Any]:
     except requests.RequestException as e:
         logger.warning("Error querying realm: %s", e)
         return {"success": False, "error": str(e)}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error("Unexpected error querying realm: %s", e)
         return {"success": False, "error": "Internal RPC query error"}
 
@@ -126,7 +126,7 @@ def verify_fingerprint_onchain(fingerprint: str) -> dict[str, Any]:
                 "source": "Gno.land Testnet (onyx-1)",
                 "details": output,
             }
-    
+
     # Handle Onyx testnet inert/parked status while awaiting DAO oracle activation
     if res.get("is_parked"):
         return {
